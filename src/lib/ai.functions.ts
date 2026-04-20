@@ -29,17 +29,45 @@ async function callGateway(body: Record<string, unknown>) {
   return res.json();
 }
 
-function buildContentParts(prompt: string, docs: DocBlob[]) {
+async function fetchAsDataUrl(url: string, mimeType: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    // Cap at ~15MB per file to stay within model limits
+    if (buf.byteLength > 15 * 1024 * 1024) return null;
+    const bytes = new Uint8Array(buf);
+    let binary = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    const b64 = btoa(binary);
+    return `data:${mimeType};base64,${b64}`;
+  } catch {
+    return null;
+  }
+}
+
+async function buildContentParts(prompt: string, docs: DocBlob[]) {
   const parts: Array<Record<string, unknown>> = [{ type: "text", text: prompt }];
   for (const d of docs) {
-    if (d.mimeType.startsWith("image/")) {
-      parts.push({ type: "image_url", image_url: { url: d.url } });
-    } else {
-      // PDFs and other files: include as a referenced URL note (Gemini will fetch image_url for images only).
-      // For PDFs we rely on extracted text / the file URL listed for the model's context.
+    const dataUrl = await fetchAsDataUrl(d.url, d.mimeType);
+    if (!dataUrl) {
       parts.push({
         type: "text",
-        text: `\n[Attached document: ${d.fileName} (${d.mimeType}) — URL: ${d.url}]`,
+        text: `\n[Could not load attached document: ${d.fileName} (${d.mimeType})]`,
+      });
+      continue;
+    }
+    if (d.mimeType.startsWith("image/") || d.mimeType === "application/pdf") {
+      // Gemini via OpenAI-compatible interface accepts PDFs and images via image_url with data URLs
+      parts.push({ type: "image_url", image_url: { url: dataUrl } });
+      parts.push({ type: "text", text: `\n[Document: ${d.fileName}]` });
+    } else {
+      parts.push({
+        type: "text",
+        text: `\n[Attached document of type ${d.mimeType}: ${d.fileName} — content not directly readable]`,
       });
     }
   }
@@ -85,13 +113,13 @@ const ANALYSIS_TOOL = {
 export const analyzeCase = createServerFn({ method: "POST" })
   .inputValidator((data: { documents: DocBlob[]; extractedText?: string }) => data)
   .handler(async ({ data }) => {
-    const prompt = `Analyse the following Government file and return a structured analysis using the submit_analysis tool.\n\nNumber of documents: ${data.documents.length}\nFile names: ${data.documents.map((d) => d.fileName).join(", ")}\n\n${data.extractedText ? `Extracted document text:\n---\n${data.extractedText.slice(0, 60000)}\n---` : ""}\n\nDerive the subject line, reference, key facts, issues, deficiencies, applicable rules/GOs/circulars, and a reasoned recommendation strictly from the material on record. Use standard Government administrative phrasing.`;
+    const prompt = `Analyse the attached Government file documents and return a structured analysis using the submit_analysis tool.\n\nNumber of documents attached: ${data.documents.length}\nFile names: ${data.documents.map((d) => d.fileName).join(", ")}\n\nCRITICAL INSTRUCTIONS:\n- The actual PDF / image documents are attached inline below. READ THEM directly.\n- Derive every field STRICTLY from what is visibly present in those documents.\n- Do NOT invent names, dates, file numbers, sanctions, GOs, rules, amounts, or any facts that are not actually visible in the documents.\n- If the documents are blank, illegible, or do not contain enough information for a field, return an empty array (for list fields) or the exact text "Not discernible from the record on file." (for text fields). Never fabricate.\n- Subject and reference must be drawn from the documents themselves; if absent, use a neutral descriptor based on visible content.`;
 
     const body = {
       model: MODEL,
       messages: [
         { role: "system", content: SYSTEM_NOTING },
-        { role: "user", content: buildContentParts(prompt, data.documents) },
+        { role: "user", content: await buildContentParts(prompt, data.documents) },
       ],
       tools: [ANALYSIS_TOOL],
       tool_choice: { type: "function", function: { name: "submit_analysis" } },
@@ -146,13 +174,13 @@ export const generateNoting = createServerFn({ method: "POST" })
       ? `\n\nThe previous draft was:\n---\n${data.previousNote}\n---\n${refineMap[data.refinement] ?? ""}`
       : "";
 
-    const prompt = `Using the analysis and documents provided, draft an official Government file noting.\n\nNoting type guidance: ${guidance}\n${data.customInstruction ? `\nOfficer's custom instruction: ${data.customInstruction}` : ""}\n\nStructured analysis (JSON):\n${JSON.stringify(data.analysis, null, 2)}\n\n${data.extractedText ? `Document extract:\n---\n${data.extractedText.slice(0, 40000)}\n---` : ""}\n\nRules:\n- Begin with a numbered paragraph 1 stating the matter examined.\n- Use standard administrative phrasing such as "The matter has been examined.", "On perusal of the records placed in the file...", "It is seen that...", "In the circumstances, the proposal may be considered...".\n- Reference rules / GOs / circulars where supported by the record.\n- Number paragraphs (1., 2., 3., ...).\n- End with the appropriate submission line and a signature block placeholder line: "(Section Officer)" / "(Under Secretary)" as appropriate.\n- Output ONLY the noting text, no preamble, no markdown headings.${refine}`;
+    const prompt = `Using the analysis and the ATTACHED documents (provided inline below), draft an official Government file noting.\n\nNoting type guidance: ${guidance}\n${data.customInstruction ? `\nOfficer's custom instruction: ${data.customInstruction}` : ""}\n\nStructured analysis (JSON):\n${JSON.stringify(data.analysis, null, 2)}\n\nRules:\n- Ground every statement in what is actually present in the analysis or the attached documents. Do NOT invent file numbers, names, dates, amounts, sanctions, GOs, rules or circulars.\n- If a fact is not on record, either omit it or say "the record does not disclose…".\n- Begin with a numbered paragraph 1 stating the matter examined.\n- Use standard administrative phrasing such as "The matter has been examined.", "On perusal of the records placed in the file...", "It is seen that...", "In the circumstances, the proposal may be considered...".\n- Number paragraphs (1., 2., 3., ...).\n- End with the appropriate submission line and a signature block placeholder line: "(Section Officer)" / "(Under Secretary)" as appropriate.\n- Output ONLY the noting text, no preamble, no markdown headings.${refine}`;
 
     const body = {
       model: MODEL,
       messages: [
         { role: "system", content: SYSTEM_NOTING },
-        { role: "user", content: buildContentParts(prompt, data.documents) },
+        { role: "user", content: await buildContentParts(prompt, data.documents) },
       ],
     };
 
