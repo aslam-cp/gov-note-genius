@@ -180,7 +180,7 @@ export const generateNoting = createServerFn({ method: "POST" })
       model: MODEL,
       messages: [
         { role: "system", content: SYSTEM_NOTING },
-        { role: "user", content: buildContentParts(prompt, data.documents) },
+        { role: "user", content: await buildContentParts(prompt, data.documents) },
       ],
     };
 
