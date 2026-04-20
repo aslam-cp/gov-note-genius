@@ -9,38 +9,121 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as NewRouteImport } from './routes/new'
+import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CaseCaseIdUploadRouteImport } from './routes/case.$caseId.upload'
+import { Route as CaseCaseIdNotingRouteImport } from './routes/case.$caseId.noting'
+import { Route as CaseCaseIdAnalysisRouteImport } from './routes/case.$caseId.analysis'
 
+const NewRoute = NewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CaseCaseIdUploadRoute = CaseCaseIdUploadRouteImport.update({
+  id: '/case/$caseId/upload',
+  path: '/case/$caseId/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CaseCaseIdNotingRoute = CaseCaseIdNotingRouteImport.update({
+  id: '/case/$caseId/noting',
+  path: '/case/$caseId/noting',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CaseCaseIdAnalysisRoute = CaseCaseIdAnalysisRouteImport.update({
+  id: '/case/$caseId/analysis',
+  path: '/case/$caseId/analysis',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/new': typeof NewRoute
+  '/case/$caseId/analysis': typeof CaseCaseIdAnalysisRoute
+  '/case/$caseId/noting': typeof CaseCaseIdNotingRoute
+  '/case/$caseId/upload': typeof CaseCaseIdUploadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/new': typeof NewRoute
+  '/case/$caseId/analysis': typeof CaseCaseIdAnalysisRoute
+  '/case/$caseId/noting': typeof CaseCaseIdNotingRoute
+  '/case/$caseId/upload': typeof CaseCaseIdUploadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/history': typeof HistoryRoute
+  '/new': typeof NewRoute
+  '/case/$caseId/analysis': typeof CaseCaseIdAnalysisRoute
+  '/case/$caseId/noting': typeof CaseCaseIdNotingRoute
+  '/case/$caseId/upload': typeof CaseCaseIdUploadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/history'
+    | '/new'
+    | '/case/$caseId/analysis'
+    | '/case/$caseId/noting'
+    | '/case/$caseId/upload'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/history'
+    | '/new'
+    | '/case/$caseId/analysis'
+    | '/case/$caseId/noting'
+    | '/case/$caseId/upload'
+  id:
+    | '__root__'
+    | '/'
+    | '/history'
+    | '/new'
+    | '/case/$caseId/analysis'
+    | '/case/$caseId/noting'
+    | '/case/$caseId/upload'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HistoryRoute: typeof HistoryRoute
+  NewRoute: typeof NewRoute
+  CaseCaseIdAnalysisRoute: typeof CaseCaseIdAnalysisRoute
+  CaseCaseIdNotingRoute: typeof CaseCaseIdNotingRoute
+  CaseCaseIdUploadRoute: typeof CaseCaseIdUploadRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/new': {
+      id: '/new'
+      path: '/new'
+      fullPath: '/new'
+      preLoaderRoute: typeof NewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,21 +131,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/case/$caseId/upload': {
+      id: '/case/$caseId/upload'
+      path: '/case/$caseId/upload'
+      fullPath: '/case/$caseId/upload'
+      preLoaderRoute: typeof CaseCaseIdUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/case/$caseId/noting': {
+      id: '/case/$caseId/noting'
+      path: '/case/$caseId/noting'
+      fullPath: '/case/$caseId/noting'
+      preLoaderRoute: typeof CaseCaseIdNotingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/case/$caseId/analysis': {
+      id: '/case/$caseId/analysis'
+      path: '/case/$caseId/analysis'
+      fullPath: '/case/$caseId/analysis'
+      preLoaderRoute: typeof CaseCaseIdAnalysisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HistoryRoute: HistoryRoute,
+  NewRoute: NewRoute,
+  CaseCaseIdAnalysisRoute: CaseCaseIdAnalysisRoute,
+  CaseCaseIdNotingRoute: CaseCaseIdNotingRoute,
+  CaseCaseIdUploadRoute: CaseCaseIdUploadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
