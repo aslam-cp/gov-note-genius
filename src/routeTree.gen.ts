@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RuleLibraryRouteImport } from './routes/rule-library'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IndexRouteImport } from './routes/index'
@@ -16,6 +17,11 @@ import { Route as CaseCaseIdUploadRouteImport } from './routes/case.$caseId.uplo
 import { Route as CaseCaseIdNotingRouteImport } from './routes/case.$caseId.noting'
 import { Route as CaseCaseIdAnalysisRouteImport } from './routes/case.$caseId.analysis'
 
+const RuleLibraryRoute = RuleLibraryRouteImport.update({
+  id: '/rule-library',
+  path: '/rule-library',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewRoute = NewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/new': typeof NewRoute
+  '/rule-library': typeof RuleLibraryRoute
   '/case/$caseId/analysis': typeof CaseCaseIdAnalysisRoute
   '/case/$caseId/noting': typeof CaseCaseIdNotingRoute
   '/case/$caseId/upload': typeof CaseCaseIdUploadRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/new': typeof NewRoute
+  '/rule-library': typeof RuleLibraryRoute
   '/case/$caseId/analysis': typeof CaseCaseIdAnalysisRoute
   '/case/$caseId/noting': typeof CaseCaseIdNotingRoute
   '/case/$caseId/upload': typeof CaseCaseIdUploadRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/new': typeof NewRoute
+  '/rule-library': typeof RuleLibraryRoute
   '/case/$caseId/analysis': typeof CaseCaseIdAnalysisRoute
   '/case/$caseId/noting': typeof CaseCaseIdNotingRoute
   '/case/$caseId/upload': typeof CaseCaseIdUploadRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/history'
     | '/new'
+    | '/rule-library'
     | '/case/$caseId/analysis'
     | '/case/$caseId/noting'
     | '/case/$caseId/upload'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/history'
     | '/new'
+    | '/rule-library'
     | '/case/$caseId/analysis'
     | '/case/$caseId/noting'
     | '/case/$caseId/upload'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/history'
     | '/new'
+    | '/rule-library'
     | '/case/$caseId/analysis'
     | '/case/$caseId/noting'
     | '/case/$caseId/upload'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HistoryRoute: typeof HistoryRoute
   NewRoute: typeof NewRoute
+  RuleLibraryRoute: typeof RuleLibraryRoute
   CaseCaseIdAnalysisRoute: typeof CaseCaseIdAnalysisRoute
   CaseCaseIdNotingRoute: typeof CaseCaseIdNotingRoute
   CaseCaseIdUploadRoute: typeof CaseCaseIdUploadRoute
@@ -110,6 +123,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/rule-library': {
+      id: '/rule-library'
+      path: '/rule-library'
+      fullPath: '/rule-library'
+      preLoaderRoute: typeof RuleLibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/new': {
       id: '/new'
       path: '/new'
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HistoryRoute: HistoryRoute,
   NewRoute: NewRoute,
+  RuleLibraryRoute: RuleLibraryRoute,
   CaseCaseIdAnalysisRoute: CaseCaseIdAnalysisRoute,
   CaseCaseIdNotingRoute: CaseCaseIdNotingRoute,
   CaseCaseIdUploadRoute: CaseCaseIdUploadRoute,

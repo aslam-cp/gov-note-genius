@@ -2,6 +2,7 @@ import { createRootRoute, Outlet, HeadContent, Scripts } from "@tanstack/react-r
 import appCss from "../styles.css?url";
 import AppLayout from "@/components/AppLayout";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/lib/auth-context";
 
 function NotFoundComponent() {
   return (
@@ -30,12 +31,12 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "File Noting Assistant — Government Drafting Aid" },
-      { name: "description", content: "Single-user AI assistant that reads file documents and drafts official Government note-sheet text in proper administrative style." },
-      { property: "og:title", content: "File Noting Assistant — Government Drafting Aid" },
-      { name: "twitter:title", content: "File Noting Assistant — Government Drafting Aid" },
-      { property: "og:description", content: "Single-user AI assistant that reads file documents and drafts official Government note-sheet text in proper administrative style." },
-      { name: "twitter:description", content: "Single-user AI assistant that reads file documents and drafts official Government note-sheet text in proper administrative style." },
+      { title: "Government of Kerala — File Noting Assistant" },
+      { name: "description", content: "Government of Kerala officer-only AI drafting aid. Reads file documents, applies KFC, Stores Purchase Manual, KPWD Manual and Finance Department GOs, and drafts official note-sheet text." },
+      { property: "og:title", content: "Government of Kerala — File Noting Assistant" },
+      { name: "twitter:title", content: "Government of Kerala — File Noting Assistant" },
+      { property: "og:description", content: "Officer-only AI drafting aid grounded in Kerala Financial Code, Stores Purchase Manual, KPWD Manual and Finance Department orders." },
+      { name: "twitter:description", content: "Officer-only AI drafting aid grounded in Kerala Financial Code, Stores Purchase Manual, KPWD Manual and Finance Department orders." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/da220fd7-2bc6-464f-b1b5-efaef1efa099/id-preview-c0fd6499--de6b7916-5760-4aa9-8948-1e2fd27945a5.lovable.app-1776656672454.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/da220fd7-2bc6-464f-b1b5-efaef1efa099/id-preview-c0fd6499--de6b7916-5760-4aa9-8948-1e2fd27945a5.lovable.app-1776656672454.png" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -66,9 +67,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <>
+    <AuthProvider>
       <AppLayout />
       <Toaster richColors position="top-center" />
-    </>
+    </AuthProvider>
   );
 }

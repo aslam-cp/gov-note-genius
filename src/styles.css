@@ -63,30 +63,32 @@
 
 :root {
   --radius: 0.5rem;
-  /* Government-style: parchment paper, deep navy ink, ashoka emblem accent */
-  --background: oklch(0.985 0.012 90);
-  --foreground: oklch(0.22 0.04 250);
-  --card: oklch(0.995 0.006 90);
-  --card-foreground: oklch(0.22 0.04 250);
-  --popover: oklch(0.995 0.006 90);
-  --popover-foreground: oklch(0.22 0.04 250);
-  --primary: oklch(0.28 0.07 255);
-  --primary-foreground: oklch(0.98 0.01 90);
-  --secondary: oklch(0.93 0.025 80);
-  --secondary-foreground: oklch(0.28 0.07 255);
-  --muted: oklch(0.94 0.018 85);
-  --muted-foreground: oklch(0.45 0.03 250);
-  --accent: oklch(0.65 0.16 45);
-  --accent-foreground: oklch(0.99 0.01 90);
+  /* Kerala Government palette: parchment, deep maroon-red ink, kerala green accent, gold trim */
+  --background: oklch(0.985 0.014 90);
+  --foreground: oklch(0.22 0.05 25);
+  --card: oklch(0.995 0.008 90);
+  --card-foreground: oklch(0.22 0.05 25);
+  --popover: oklch(0.995 0.008 90);
+  --popover-foreground: oklch(0.22 0.05 25);
+  /* Primary: Kerala official deep maroon-red (close to GoK letterhead red-brown) */
+  --primary: oklch(0.35 0.13 25);
+  --primary-foreground: oklch(0.98 0.012 90);
+  --secondary: oklch(0.93 0.028 80);
+  --secondary-foreground: oklch(0.35 0.13 25);
+  --muted: oklch(0.94 0.02 85);
+  --muted-foreground: oklch(0.45 0.04 30);
+  /* Accent: Kerala state gold */
+  --accent: oklch(0.72 0.16 75);
+  --accent-foreground: oklch(0.22 0.05 25);
   --destructive: oklch(0.55 0.22 27);
   --destructive-foreground: oklch(0.98 0.01 90);
-  --border: oklch(0.86 0.02 80);
-  --input: oklch(0.9 0.02 85);
-  --ring: oklch(0.5 0.08 255);
-  --gradient-header: linear-gradient(135deg, oklch(0.28 0.07 255), oklch(0.32 0.09 260));
-  --gradient-accent: linear-gradient(135deg, oklch(0.65 0.16 45), oklch(0.6 0.18 30));
-  --shadow-paper: 0 1px 2px oklch(0.2 0.04 250 / 0.08), 0 8px 24px oklch(0.2 0.04 250 / 0.06);
-  --shadow-elevated: 0 4px 12px oklch(0.2 0.04 250 / 0.12), 0 16px 40px oklch(0.2 0.04 250 / 0.10);
+  --border: oklch(0.86 0.025 75);
+  --input: oklch(0.9 0.022 80);
+  --ring: oklch(0.5 0.12 25);
+  --gradient-header: linear-gradient(135deg, oklch(0.32 0.13 25), oklch(0.38 0.14 30));
+  --gradient-accent: linear-gradient(135deg, oklch(0.72 0.16 75), oklch(0.65 0.18 60));
+  --shadow-paper: 0 1px 2px oklch(0.2 0.05 25 / 0.08), 0 8px 24px oklch(0.2 0.05 25 / 0.06);
+  --shadow-elevated: 0 4px 12px oklch(0.2 0.05 25 / 0.12), 0 16px 40px oklch(0.2 0.05 25 / 0.10);
   --font-serif: 'Source Serif 4', 'Georgia', serif;
   --font-sans: 'Inter', system-ui, sans-serif;
   --chart-1: oklch(0.646 0.222 41.116);
@@ -181,4 +183,35 @@
   line-height: 1.8;
   font-size: 1rem;
   white-space: pre-wrap;
+}
+
+.kerala-emblem {
+  height: 2.75rem;
+  width: 2.75rem;
+  border-radius: 9999px;
+  background: var(--gradient-accent);
+  border: 2px solid var(--accent);
+  box-shadow: var(--shadow-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-foreground);
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.kerala-emblem-large {
+  height: 8rem;
+  width: 8rem;
+  border-radius: 9999px;
+  background: var(--gradient-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 3rem;
+  color: var(--accent-foreground);
 }

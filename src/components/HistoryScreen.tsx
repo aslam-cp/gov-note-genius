@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { getSessionId } from "@/lib/session";
+import { useAuth } from "@/lib/auth-context";
 import { FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -11,21 +11,23 @@ interface Row {
 }
 
 export default function HistoryScreen() {
+  const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
+    if (!user) return;
     setLoading(true);
     const { data } = await supabase
       .from("noting_cases")
       .select("id,subject,reference,status,updated_at")
-      .eq("session_id", getSessionId())
+      .eq("owner_id", user.id)
       .order("updated_at", { ascending: false });
     setRows(data ?? []);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [user]);
 
   const remove = async (id: string) => {
     if (!confirm("Delete this case and all its documents?")) return;
@@ -39,7 +41,7 @@ export default function HistoryScreen() {
       <div>
         <Link to="/" className="text-sm text-muted-foreground hover:text-primary">← Home</Link>
         <h2 className="font-serif text-2xl text-primary mt-2">Case History</h2>
-        <p className="text-sm text-muted-foreground">All cases you have drafted on this device.</p>
+        <p className="text-sm text-muted-foreground">All cases drafted under your officer account.</p>
       </div>
 
       {loading ? (

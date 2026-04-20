@@ -23,6 +23,7 @@ export type Database = {
           id: string
           noting_text: string | null
           noting_type: string
+          owner_id: string | null
           reference: string
           session_id: string
           status: string
@@ -37,6 +38,7 @@ export type Database = {
           id?: string
           noting_text?: string | null
           noting_type?: string
+          owner_id?: string | null
           reference?: string
           session_id: string
           status?: string
@@ -51,6 +53,7 @@ export type Database = {
           id?: string
           noting_text?: string | null
           noting_type?: string
+          owner_id?: string | null
           reference?: string
           session_id?: string
           status?: string
@@ -99,6 +102,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rule_documents: {
+        Row: {
+          category: string
+          created_at: string
+          file_name: string
+          id: string
+          is_active: boolean
+          mime_type: string
+          reference_no: string
+          size_bytes: number
+          storage_path: string
+          summary: string
+          title: string
+          updated_at: string
+          uploader_id: string
+          year: number | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          file_name: string
+          id?: string
+          is_active?: boolean
+          mime_type: string
+          reference_no?: string
+          size_bytes?: number
+          storage_path: string
+          summary?: string
+          title: string
+          updated_at?: string
+          uploader_id: string
+          year?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          is_active?: boolean
+          mime_type?: string
+          reference_no?: string
+          size_bytes?: number
+          storage_path?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+          uploader_id?: string
+          year?: number | null
+        }
+        Relationships: []
       }
     }
     Views: {
