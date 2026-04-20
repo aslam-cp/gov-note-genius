@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { createClient } from "@supabase/supabase-js";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3-flash-preview";
@@ -7,6 +8,72 @@ interface DocBlob {
   fileName: string;
   mimeType: string;
   url: string; // public URL from storage bucket
+}
+
+function getAdminClient() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Supabase server credentials missing");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+const CATEGORY_LABEL: Record<string, string> = {
+  kfc: "Kerala Financial Code",
+  stores_purchase: "Kerala Stores Purchase Manual",
+  kpwd: "Kerala PWD Manual",
+  finance_go: "Kerala Finance Department GO",
+  circular: "Circular",
+  other: "Other reference",
+};
+
+interface RuleEntry {
+  title: string;
+  category: string;
+  reference_no: string;
+  year: number | null;
+  summary: string;
+  storage_path: string;
+  file_name: string;
+  mime_type: string;
+}
+
+async function fetchRuleLibrary(): Promise<{ summary: string; docs: DocBlob[] }> {
+  try {
+    const admin = getAdminClient();
+    const { data } = await admin
+      .from("rule_documents")
+      .select("title,category,reference_no,year,summary,storage_path,file_name,mime_type")
+      .eq("is_active", true)
+      .limit(20);
+    const rules = (data ?? []) as RuleEntry[];
+    if (rules.length === 0) {
+      return { summary: "No rule documents have been added to the Rule Library yet.", docs: [] };
+    }
+    const summary = rules
+      .map((r, i) => {
+        const cat = CATEGORY_LABEL[r.category] ?? r.category;
+        const ref = [r.reference_no, r.year].filter(Boolean).join(", ");
+        const gist = r.summary ? ` — ${r.summary}` : "";
+        return `${i + 1}. [${cat}] ${r.title}${ref ? ` (${ref})` : ""}${gist}`;
+      })
+      .join("\n");
+
+    // Attach top 5 rule files inline so the model can read them directly
+    const top = rules.slice(0, 5);
+    const docs: DocBlob[] = [];
+    for (const r of top) {
+      const { data: signed } = await admin.storage
+        .from("rule-library")
+        .createSignedUrl(r.storage_path, 60 * 10);
+      if (signed?.signedUrl) {
+        docs.push({ fileName: `[RULE] ${r.title} — ${r.file_name}`, mimeType: r.mime_type, url: signed.signedUrl });
+      }
+    }
+    return { summary, docs };
+  } catch (e) {
+    console.error("fetchRuleLibrary failed", e);
+    return { summary: "Rule library unavailable.", docs: [] };
+  }
 }
 
 async function callGateway(body: Record<string, unknown>) {
