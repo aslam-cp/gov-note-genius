@@ -75,7 +75,7 @@ export default function AnalysisScreen() {
           subject: a.subject,
           reference: a.reference,
           context_summary: a.brief,
-          analysis: a as unknown as Record<string, unknown>,
+          analysis: a as unknown as never,
           status: "analysed",
         })
         .eq("id", caseId);
