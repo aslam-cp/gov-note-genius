@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { analyzeCase } from "@/lib/ai.functions";
 import { Button } from "@/components/ui/button";
 import { CaseAnalysis, NOTING_OPTIONS, NotingType } from "@/lib/noting-types";
-import { Loader2, Sparkles, ArrowRight, AlertTriangle, CheckCircle2, FileSearch } from "lucide-react";
+import { Loader2, Sparkles, ArrowRight, AlertTriangle, CheckCircle2, FileSearch, BookMarked } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,7 @@ export default function AnalysisScreen() {
   const [reference, setReference] = useState("");
   const [notingType, setNotingType] = useState<NotingType>("approve");
   const [customInstruction, setCustomInstruction] = useState("");
+  const [useRuleLibrary, setUseRuleLibrary] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -63,7 +64,7 @@ export default function AnalysisScreen() {
         const { data } = supabase.storage.from("noting-docs").getPublicUrl(d.storage_path);
         return { fileName: d.file_name, mimeType: d.mime_type, url: data.publicUrl };
       });
-      const result = await analyzeFn({ data: { documents } });
+      const result = await analyzeFn({ data: { documents, useRuleLibrary } });
       if ("error" in result) { toast.error(result.error); return; }
       const a = result.analysis as CaseAnalysis;
       setAnalysis(a);
@@ -112,10 +113,22 @@ export default function AnalysisScreen() {
           <p className="mb-4 text-sm text-muted-foreground">
             {docs.length} document(s) on file. Click below to analyse.
           </p>
-          <Button size="lg" onClick={runAnalysis} disabled={loading} className="gap-2">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {loading ? "Analysing the file…" : "Analyse Case"}
-          </Button>
+          <div className="flex flex-col items-center gap-3">
+            <Button
+              type="button"
+              variant={useRuleLibrary ? "default" : "outline"}
+              onClick={() => setUseRuleLibrary((v) => !v)}
+              className="gap-2"
+              size="sm"
+            >
+              <BookMarked className="h-4 w-4" />
+              {useRuleLibrary ? "Knowledge Base: ON" : "Use Knowledge Base (Rule Library)"}
+            </Button>
+            <Button size="lg" onClick={runAnalysis} disabled={loading} className="gap-2">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {loading ? "Analysing the file…" : "Analyse Case"}
+            </Button>
+          </div>
         </div>
       )}
 
