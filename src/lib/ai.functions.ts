@@ -113,13 +113,13 @@ const ANALYSIS_TOOL = {
 export const analyzeCase = createServerFn({ method: "POST" })
   .inputValidator((data: { documents: DocBlob[]; extractedText?: string }) => data)
   .handler(async ({ data }) => {
-    const prompt = `Analyse the following Government file and return a structured analysis using the submit_analysis tool.\n\nNumber of documents: ${data.documents.length}\nFile names: ${data.documents.map((d) => d.fileName).join(", ")}\n\n${data.extractedText ? `Extracted document text:\n---\n${data.extractedText.slice(0, 60000)}\n---` : ""}\n\nDerive the subject line, reference, key facts, issues, deficiencies, applicable rules/GOs/circulars, and a reasoned recommendation strictly from the material on record. Use standard Government administrative phrasing.`;
+    const prompt = `Analyse the attached Government file documents and return a structured analysis using the submit_analysis tool.\n\nNumber of documents attached: ${data.documents.length}\nFile names: ${data.documents.map((d) => d.fileName).join(", ")}\n\nCRITICAL INSTRUCTIONS:\n- The actual PDF / image documents are attached inline below. READ THEM directly.\n- Derive every field STRICTLY from what is visibly present in those documents.\n- Do NOT invent names, dates, file numbers, sanctions, GOs, rules, amounts, or any facts that are not actually visible in the documents.\n- If the documents are blank, illegible, or do not contain enough information for a field, return an empty array (for list fields) or the exact text "Not discernible from the record on file." (for text fields). Never fabricate.\n- Subject and reference must be drawn from the documents themselves; if absent, use a neutral descriptor based on visible content.`;
 
     const body = {
       model: MODEL,
       messages: [
         { role: "system", content: SYSTEM_NOTING },
-        { role: "user", content: buildContentParts(prompt, data.documents) },
+        { role: "user", content: await buildContentParts(prompt, data.documents) },
       ],
       tools: [ANALYSIS_TOOL],
       tool_choice: { type: "function", function: { name: "submit_analysis" } },
