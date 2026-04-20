@@ -141,7 +141,20 @@ async function buildContentParts(prompt: string, docs: DocBlob[]) {
   return parts;
 }
 
-const SYSTEM_NOTING = `You are an expert assistant to a senior Government of India officer drafting official file notings. Your output must be precise, formal, and in standard administrative English used in Government note-sheets. You never use casual language. You always reason from the documents on record. You are advisory only — final decision rests with the competent authority.`;
+const SYSTEM_NOTING = `You are an expert assistant to a senior Government of Kerala officer drafting official file notings in the Sachivalayam style.
+
+Your output must be precise, formal, and in standard administrative English used in Kerala Government note-sheets (with bilingual subject lines where appropriate).
+
+Knowledge base of authoritative references:
+- The Kerala Financial Code (KFC), Volumes I and II.
+- The Kerala Stores Purchase Manual (Stores Purchase Department).
+- The Kerala PWD Manual.
+- Government Orders and Circulars of the Finance Department, Government of Kerala.
+- Any specific rule chapters / GOs the officer has uploaded to this portal's Rule Library — these take precedence as the most current and authoritative source.
+
+You always reason strictly from the documents on record and the rule library entries supplied to you. You never cite a rule, GO, KFC article, paragraph of the Stores Purchase Manual, or KPWD Manual unless it appears either in the case documents or in the supplied Rule Library.
+
+You never use casual language. You are advisory only — the final decision rests with the competent authority of the Government of Kerala.`;
 
 const ANALYSIS_TOOL = {
   type: "function",
@@ -180,13 +193,16 @@ const ANALYSIS_TOOL = {
 export const analyzeCase = createServerFn({ method: "POST" })
   .inputValidator((data: { documents: DocBlob[]; extractedText?: string }) => data)
   .handler(async ({ data }) => {
-    const prompt = `Analyse the attached Government file documents and return a structured analysis using the submit_analysis tool.\n\nNumber of documents attached: ${data.documents.length}\nFile names: ${data.documents.map((d) => d.fileName).join(", ")}\n\nCRITICAL INSTRUCTIONS:\n- The actual PDF / image documents are attached inline below. READ THEM directly.\n- Derive every field STRICTLY from what is visibly present in those documents.\n- Do NOT invent names, dates, file numbers, sanctions, GOs, rules, amounts, or any facts that are not actually visible in the documents.\n- If the documents are blank, illegible, or do not contain enough information for a field, return an empty array (for list fields) or the exact text "Not discernible from the record on file." (for text fields). Never fabricate.\n- Subject and reference must be drawn from the documents themselves; if absent, use a neutral descriptor based on visible content.`;
+    const library = await fetchRuleLibrary();
+    const allDocs: DocBlob[] = [...data.documents, ...library.docs];
+
+    const prompt = `Analyse the attached Government of Kerala file documents and return a structured analysis using the submit_analysis tool.\n\nNumber of case documents: ${data.documents.length}\nFile names: ${data.documents.map((d) => d.fileName).join(", ")}\n\n=== KERALA RULE LIBRARY (officer-curated) ===\n${library.summary}\n\nThe top entries are also attached inline below as [RULE] documents. Treat them as authoritative. When citing rules in your analysis, prefer references that actually appear either in the case documents or in this Rule Library; do NOT invent KFC articles, GO numbers, Stores Purchase Manual paragraphs or KPWD Manual paragraphs that are not present in either source.\n\n=== INSTRUCTIONS ===\n- Read the attached PDF / image documents directly. The first ${data.documents.length} are case documents; any [RULE] entries are reference material.\n- Derive every field STRICTLY from what is visibly present.\n- Do NOT invent names, dates, file numbers, sanctions, GOs, rules, amounts, or any facts that are not visible.\n- The 'rules' array MUST list only KFC articles, Stores Purchase Manual paragraphs, KPWD Manual paragraphs, Finance Department GOs or circulars that are either (a) cited in the case documents or (b) present in the Rule Library above. If none apply, return an empty array.\n- If the documents are blank, illegible, or insufficient for a field, return an empty array (for list fields) or the exact text "Not discernible from the record on file." (for text fields). Never fabricate.\n- Subject and reference must be drawn from the documents themselves.`;
 
     const body = {
       model: MODEL,
       messages: [
         { role: "system", content: SYSTEM_NOTING },
-        { role: "user", content: await buildContentParts(prompt, data.documents) },
+        { role: "user", content: await buildContentParts(prompt, allDocs) },
       ],
       tools: [ANALYSIS_TOOL],
       tool_choice: { type: "function", function: { name: "submit_analysis" } },
@@ -241,13 +257,16 @@ export const generateNoting = createServerFn({ method: "POST" })
       ? `\n\nThe previous draft was:\n---\n${data.previousNote}\n---\n${refineMap[data.refinement] ?? ""}`
       : "";
 
-    const prompt = `Using the analysis and the ATTACHED documents (provided inline below), draft an official Government file noting.\n\nNoting type guidance: ${guidance}\n${data.customInstruction ? `\nOfficer's custom instruction: ${data.customInstruction}` : ""}\n\nStructured analysis (JSON):\n${JSON.stringify(data.analysis, null, 2)}\n\nRules:\n- Ground every statement in what is actually present in the analysis or the attached documents. Do NOT invent file numbers, names, dates, amounts, sanctions, GOs, rules or circulars.\n- If a fact is not on record, either omit it or say "the record does not disclose…".\n- Begin with a numbered paragraph 1 stating the matter examined.\n- Use standard administrative phrasing such as "The matter has been examined.", "On perusal of the records placed in the file...", "It is seen that...", "In the circumstances, the proposal may be considered...".\n- Number paragraphs (1., 2., 3., ...).\n- End with the appropriate submission line and a signature block placeholder line: "(Section Officer)" / "(Under Secretary)" as appropriate.\n- Output ONLY the noting text, no preamble, no markdown headings.${refine}`;
+    const library = await fetchRuleLibrary();
+    const allDocs: DocBlob[] = [...data.documents, ...library.docs];
+
+    const prompt = `Using the analysis, the ATTACHED case documents and the Kerala Rule Library, draft an official Government of Kerala file noting in Sachivalayam style.\n\nNoting type guidance: ${guidance}\n${data.customInstruction ? `\nOfficer's custom instruction: ${data.customInstruction}` : ""}\n\nStructured analysis (JSON):\n${JSON.stringify(data.analysis, null, 2)}\n\n=== KERALA RULE LIBRARY (officer-curated) ===\n${library.summary}\n\nRules for drafting:\n- Ground every statement in the analysis, the case documents, or the Rule Library. Do NOT invent file numbers, names, dates, amounts, sanctions, KFC articles, Stores Purchase Manual paragraphs, KPWD Manual paragraphs, or GOs/circulars.\n- When citing a rule, KFC article, Stores Purchase Manual paragraph, KPWD Manual paragraph, GO or circular, only cite items that actually appear in the case documents or in the Rule Library above. If unsure, do not cite a number — phrase it generally (e.g. "the relevant provisions of the Kerala Financial Code").\n- If a fact is not on record, either omit it or say "the record does not disclose…".\n- Begin with a numbered paragraph 1 stating the matter examined.\n- Use Kerala Sachivalayam administrative phrasing such as "The matter has been examined.", "On perusal of the records placed in the file...", "It is seen that...", "In the circumstances, the proposal may be considered...".\n- Number paragraphs (1., 2., 3., ...).\n- End with the appropriate submission line and a signature block placeholder line: "(Section Officer)" / "(Under Secretary to Government)" as appropriate.\n- Output ONLY the noting text, no preamble, no markdown headings.${refine}`;
 
     const body = {
       model: MODEL,
       messages: [
         { role: "system", content: SYSTEM_NOTING },
-        { role: "user", content: await buildContentParts(prompt, data.documents) },
+        { role: "user", content: await buildContentParts(prompt, allDocs) },
       ],
     };
 
