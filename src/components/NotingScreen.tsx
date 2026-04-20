@@ -160,7 +160,18 @@ export default function NotingScreen() {
             />
           </div>
 
-          <div className="paper p-4 flex flex-wrap gap-2">
+          <div className="paper p-4 flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={useRuleLibrary ? "default" : "outline"}
+              onClick={() => setUseRuleLibrary((v) => !v)}
+              className="gap-1.5"
+            >
+              <BookMarked className="h-3.5 w-3.5" />
+              {useRuleLibrary ? "Knowledge Base: ON" : "Knowledge Base: OFF"}
+            </Button>
+            <span className="w-px h-6 bg-border mx-1" />
             <RefineBtn onClick={() => run("regenerate")} loading={loading} icon={<RefreshCw className="h-3.5 w-3.5" />}>Regenerate</RefineBtn>
             <RefineBtn onClick={() => run("shorter")} loading={loading} icon={<Minus className="h-3.5 w-3.5" />}>Make Shorter</RefineBtn>
             <RefineBtn onClick={() => run("longer")} loading={loading} icon={<Plus className="h-3.5 w-3.5" />}>Make Longer</RefineBtn>
