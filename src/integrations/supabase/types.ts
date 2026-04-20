@@ -14,7 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      noting_cases: {
+        Row: {
+          analysis: Json | null
+          context_summary: string
+          created_at: string
+          custom_instruction: string
+          id: string
+          noting_text: string | null
+          noting_type: string
+          reference: string
+          session_id: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          analysis?: Json | null
+          context_summary?: string
+          created_at?: string
+          custom_instruction?: string
+          id?: string
+          noting_text?: string | null
+          noting_type?: string
+          reference?: string
+          session_id: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          analysis?: Json | null
+          context_summary?: string
+          created_at?: string
+          custom_instruction?: string
+          id?: string
+          noting_text?: string | null
+          noting_type?: string
+          reference?: string
+          session_id?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      noting_documents: {
+        Row: {
+          case_id: string
+          created_at: string
+          extracted_text: string | null
+          file_name: string
+          id: string
+          mime_type: string
+          size_bytes: number
+          storage_path: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          extracted_text?: string | null
+          file_name: string
+          id?: string
+          mime_type: string
+          size_bytes?: number
+          storage_path: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          extracted_text?: string | null
+          file_name?: string
+          id?: string
+          mime_type?: string
+          size_bytes?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "noting_documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "noting_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
