@@ -29,17 +29,45 @@ async function callGateway(body: Record<string, unknown>) {
   return res.json();
 }
 
-function buildContentParts(prompt: string, docs: DocBlob[]) {
+async function fetchAsDataUrl(url: string, mimeType: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const buf = await res.arrayBuffer();
+    // Cap at ~15MB per file to stay within model limits
+    if (buf.byteLength > 15 * 1024 * 1024) return null;
+    const bytes = new Uint8Array(buf);
+    let binary = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+    }
+    const b64 = btoa(binary);
+    return `data:${mimeType};base64,${b64}`;
+  } catch {
+    return null;
+  }
+}
+
+async function buildContentParts(prompt: string, docs: DocBlob[]) {
   const parts: Array<Record<string, unknown>> = [{ type: "text", text: prompt }];
   for (const d of docs) {
-    if (d.mimeType.startsWith("image/")) {
-      parts.push({ type: "image_url", image_url: { url: d.url } });
-    } else {
-      // PDFs and other files: include as a referenced URL note (Gemini will fetch image_url for images only).
-      // For PDFs we rely on extracted text / the file URL listed for the model's context.
+    const dataUrl = await fetchAsDataUrl(d.url, d.mimeType);
+    if (!dataUrl) {
       parts.push({
         type: "text",
-        text: `\n[Attached document: ${d.fileName} (${d.mimeType}) — URL: ${d.url}]`,
+        text: `\n[Could not load attached document: ${d.fileName} (${d.mimeType})]`,
+      });
+      continue;
+    }
+    if (d.mimeType.startsWith("image/") || d.mimeType === "application/pdf") {
+      // Gemini via OpenAI-compatible interface accepts PDFs and images via image_url with data URLs
+      parts.push({ type: "image_url", image_url: { url: dataUrl } });
+      parts.push({ type: "text", text: `\n[Document: ${d.fileName}]` });
+    } else {
+      parts.push({
+        type: "text",
+        text: `\n[Attached document of type ${d.mimeType}: ${d.fileName} — content not directly readable]`,
       });
     }
   }
