@@ -184,3 +184,34 @@
   font-size: 1rem;
   white-space: pre-wrap;
 }
+
+.kerala-emblem {
+  height: 2.75rem;
+  width: 2.75rem;
+  border-radius: 9999px;
+  background: var(--gradient-accent);
+  border: 2px solid var(--accent);
+  box-shadow: var(--shadow-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-foreground);
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.kerala-emblem-large {
+  height: 8rem;
+  width: 8rem;
+  border-radius: 9999px;
+  background: var(--gradient-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 3rem;
+  color: var(--accent-foreground);
+}
