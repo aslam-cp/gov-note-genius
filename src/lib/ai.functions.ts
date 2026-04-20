@@ -164,9 +164,10 @@ LANGUAGE HANDLING:
 FORMATTING RULES (STRICT):
 - Do NOT use any markdown or special formatting characters in the noting text.
 - Do NOT use the asterisk (*), underscore (_), backtick (\`), tilde (~), hash (#), pipe (|), greater-than (>), or any bullet glyphs such as • or –.
-- Use only numbered paragraphs in the form "1.", "2.", "3." for structure.
+- Do NOT use any paragraph numbering (no "1.", "2.", "3.", no "(i)", "(a)", etc.). Write as flowing prose paragraphs separated by blank lines.
 - Use plain prose. No bold, italic, headings or markdown of any kind.
 - The hyphen (-) may be used only inside a normal word (e.g. "note-sheet"), never as a list bullet.
+- LENGTH: The entire noting (excluding the signature line) must be between 100 and 150 words. Be crisp and concise. Do not pad.
 
 Knowledge base of authoritative references (used ONLY when knowledge bases are explicitly supplied to you in this prompt):
 - Kerala Financial Code (KFC), Volumes I and II.
@@ -300,7 +301,7 @@ export const generateNoting = createServerFn({ method: "POST" })
       ? `- When citing a rule, KFC article, Stores Purchase Manual paragraph, KPWD Manual paragraph, GO or circular, only cite items that actually appear in the case documents or in the applied knowledge bases above.`
       : `- Do NOT cite any specific KFC article number, Stores Purchase Manual paragraph, KPWD Manual paragraph, GO number or circular number unless it appears verbatim in the case documents.`;
 
-    const prompt = `Using the analysis and the ATTACHED case documents${useLib ? " and the applied knowledge bases" : ""}, draft an official Government of Kerala file noting in Sachivalayam style, FROM THE PERSPECTIVE OF THE DIRECTOR / CEO of the organization.\n\nDocuments may contain Malayalam text. Read it directly, translate it to formal administrative English, and write the entire noting in English.\n\nNoting type guidance: ${guidance}\n${data.customInstruction ? `\nOfficer's custom instruction: ${data.customInstruction}` : ""}\n\nStructured analysis (JSON):\n${JSON.stringify(data.analysis, null, 2)}${libBlock}\n\nRules for drafting:\n- Ground every statement in the analysis, the case documents${useLib ? ", or the applied knowledge bases" : ""}. Do NOT invent file numbers, names, dates, amounts, sanctions, KFC articles, Stores Purchase Manual paragraphs, KPWD Manual paragraphs, or GOs/circulars.\n${ruleRule}\n- If a fact is not on record, either omit it or say "the record does not disclose…".\n- Begin with a numbered paragraph 1 stating the matter examined.\n- Use Kerala Sachivalayam administrative phrasing such as "The matter has been examined.", "On perusal of the records placed in the file...", "It is seen that...".\n- Number paragraphs (1., 2., 3., ...).\n- STRICT: Do NOT use any of these characters anywhere in the noting: asterisk (*), underscore (_), backtick (\`), tilde (~), hash (#), pipe (|), greater-than (>), bullet glyphs (•, –). No markdown formatting whatsoever. Plain prose only.\n- Sign off with the appropriate submission line and a signature block placeholder line "(Director / Chief Executive Officer)".\n- Output ONLY the noting text in English, no preamble, no markdown headings.${refine}`;
+    const prompt = `Using the analysis and the ATTACHED case documents${useLib ? " and the applied knowledge bases" : ""}, draft an official Government of Kerala file noting in Sachivalayam style, FROM THE PERSPECTIVE OF THE DIRECTOR / CEO of the organization.\n\nDocuments may contain Malayalam text. Read it directly, translate it to formal administrative English, and write the entire noting in English.\n\nNoting type guidance: ${guidance}\n${data.customInstruction ? `\nOfficer's custom instruction: ${data.customInstruction}` : ""}\n\nStructured analysis (JSON):\n${JSON.stringify(data.analysis, null, 2)}${libBlock}\n\nRules for drafting:\n- Ground every statement in the analysis, the case documents${useLib ? ", or the applied knowledge bases" : ""}. Do NOT invent file numbers, names, dates, amounts, sanctions, KFC articles, Stores Purchase Manual paragraphs, KPWD Manual paragraphs, or GOs/circulars.\n${ruleRule}\n- If a fact is not on record, either omit it or say "the record does not disclose…".\n- Begin directly with the matter examined (no paragraph number, no heading).\n- Use Kerala Sachivalayam administrative phrasing such as "The matter has been examined.", "On perusal of the records placed in the file...", "It is seen that...".\n- Do NOT number paragraphs. Write 2 to 4 short flowing prose paragraphs separated by a blank line.\n- LENGTH: Keep the entire noting between 100 and 150 words (excluding the signature line). Be crisp; omit filler.\n- STRICT: Do NOT use any of these characters anywhere in the noting: asterisk (*), underscore (_), backtick (\`), tilde (~), hash (#), pipe (|), greater-than (>), bullet glyphs (•, –). No markdown formatting whatsoever. Plain prose only.\n- Sign off with the appropriate operative/submission line and a signature block placeholder line "(Director / Chief Executive Officer)".\n- Output ONLY the noting text in English, no preamble, no markdown headings.${refine}`;
 
     const body = {
       model: MODEL,
@@ -318,6 +319,8 @@ export const generateNoting = createServerFn({ method: "POST" })
       .replace(/\*\*/g, "")
       .replace(/[*_`~#|>]/g, "")
       .replace(/^[\s]*[•–][\s]*/gm, "")
+      // Strip leading paragraph numbering like "1.", "2)", "(3)", "i.", "(a)"
+      .replace(/^\s*(?:\(?\d+\)?[.)]|\(?[ivxIVX]+\)?[.)]|\(?[a-zA-Z]\)?[.)])\s+/gm, "")
       .replace(/[ \t]+\n/g, "\n");
     return { noting: text } as const;
   });
