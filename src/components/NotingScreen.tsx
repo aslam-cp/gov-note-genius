@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { generateNoting } from "@/lib/ai.functions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Copy, Download, Sparkles, RefreshCw, Minus, Plus, Scale, BookText } from "lucide-react";
+import { Loader2, Copy, Download, Sparkles, RefreshCw, Minus, Plus, Scale, BookText, BookMarked } from "lucide-react";
 import { toast } from "sonner";
 
 type Refinement = "shorter" | "longer" | "more_formal" | "stronger_rules" | "regenerate";
@@ -21,6 +21,7 @@ export default function NotingScreen() {
   const [notingType, setNotingType] = useState("approve");
   const [customInstruction, setCustomInstruction] = useState("");
   const [docs, setDocs] = useState<Array<{ file_name: string; mime_type: string; storage_path: string }>>([]);
+  const [useRuleLibrary, setUseRuleLibrary] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -60,6 +61,7 @@ export default function NotingScreen() {
           customInstruction,
           refinement,
           previousNote: noting || undefined,
+          useRuleLibrary,
         },
       });
       if ("error" in result) { toast.error(result.error); return; }
@@ -116,10 +118,22 @@ export default function NotingScreen() {
           <p className="text-sm text-muted-foreground mb-4">
             Generate the formal noting based on the case analysis and selected noting type.
           </p>
-          <Button size="lg" onClick={() => run(null)} disabled={loading} className="gap-2">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {loading ? "Drafting noting…" : "Generate Noting"}
-          </Button>
+          <div className="flex flex-col items-center gap-3">
+            <Button
+              type="button"
+              variant={useRuleLibrary ? "default" : "outline"}
+              onClick={() => setUseRuleLibrary((v) => !v)}
+              size="sm"
+              className="gap-2"
+            >
+              <BookMarked className="h-4 w-4" />
+              {useRuleLibrary ? "Knowledge Base: ON" : "Use Knowledge Base (Rule Library)"}
+            </Button>
+            <Button size="lg" onClick={() => run(null)} disabled={loading} className="gap-2">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {loading ? "Drafting noting…" : "Generate Noting"}
+            </Button>
+          </div>
         </div>
       )}
 
@@ -146,7 +160,18 @@ export default function NotingScreen() {
             />
           </div>
 
-          <div className="paper p-4 flex flex-wrap gap-2">
+          <div className="paper p-4 flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={useRuleLibrary ? "default" : "outline"}
+              onClick={() => setUseRuleLibrary((v) => !v)}
+              className="gap-1.5"
+            >
+              <BookMarked className="h-3.5 w-3.5" />
+              {useRuleLibrary ? "Knowledge Base: ON" : "Knowledge Base: OFF"}
+            </Button>
+            <span className="w-px h-6 bg-border mx-1" />
             <RefineBtn onClick={() => run("regenerate")} loading={loading} icon={<RefreshCw className="h-3.5 w-3.5" />}>Regenerate</RefineBtn>
             <RefineBtn onClick={() => run("shorter")} loading={loading} icon={<Minus className="h-3.5 w-3.5" />}>Make Shorter</RefineBtn>
             <RefineBtn onClick={() => run("longer")} loading={loading} icon={<Plus className="h-3.5 w-3.5" />}>Make Longer</RefineBtn>
