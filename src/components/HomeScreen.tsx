@@ -54,10 +54,10 @@ export default function HomeScreen() {
     <div className="space-y-8">
       <section className="paper p-8 md:p-10 relative overflow-hidden">
         <div className="absolute top-0 right-0 h-32 w-32 opacity-10 -mr-8 -mt-8">
-          <div className="kerala-emblem-large">കേ</div>
+          <div className="kerala-emblem-large">GoK</div>
         </div>
         <p className="text-xs uppercase tracking-widest text-accent font-semibold mb-2">
-          സർക്കാർ · Government of Kerala · Note-Sheet Assistant
+          Government of Kerala · Note-Sheet Assistant
         </p>
         <h2 className="font-serif text-3xl md:text-4xl text-primary mb-3">
           Draft official file notings, faster.

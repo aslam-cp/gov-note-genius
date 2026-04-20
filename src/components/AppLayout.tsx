@@ -24,14 +24,14 @@ export default function AppLayout() {
       <header className="gov-header border-b-4 border-accent">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
           <div className="kerala-emblem">
-            <span>കേ</span>
+            <span>GoK</span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] uppercase tracking-[0.25em] opacity-80">
-              സർക്കാർ · Government of Kerala
+              Government of Kerala
             </p>
             <h1 className="font-serif text-lg leading-tight truncate">
-              ഫയൽ കുറിപ്പ് സഹായി · File Noting Assistant
+              File Noting Assistant
             </h1>
           </div>
           <nav className="hidden md:flex items-center gap-1 text-sm">
