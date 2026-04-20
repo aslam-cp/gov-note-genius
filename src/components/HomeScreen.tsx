@@ -1,9 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getSessionId } from "@/lib/session";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, ArrowRight } from "lucide-react";
+import { Plus, FileText, ArrowRight, BookMarked } from "lucide-react";
 
 interface CaseRow {
   id: string;
@@ -16,28 +16,34 @@ interface CaseRow {
 
 export default function HomeScreen() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [recent, setRecent] = useState<CaseRow[]>([]);
+  const [ruleCount, setRuleCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const sid = getSessionId();
-    supabase
-      .from("noting_cases")
-      .select("id,subject,reference,noting_type,status,updated_at")
-      .eq("session_id", sid)
-      .order("updated_at", { ascending: false })
-      .limit(5)
-      .then(({ data }) => {
-        setRecent(data ?? []);
-        setLoading(false);
-      });
-  }, []);
+    if (!user) return;
+    (async () => {
+      const [{ data: cases }, { count }] = await Promise.all([
+        supabase
+          .from("noting_cases")
+          .select("id,subject,reference,noting_type,status,updated_at")
+          .eq("owner_id", user.id)
+          .order("updated_at", { ascending: false })
+          .limit(5),
+        supabase.from("rule_documents").select("id", { count: "exact", head: true }).eq("is_active", true),
+      ]);
+      setRecent(cases ?? []);
+      setRuleCount(count ?? 0);
+      setLoading(false);
+    })();
+  }, [user]);
 
   const startNew = async () => {
-    const sid = getSessionId();
+    if (!user) return;
     const { data, error } = await supabase
       .from("noting_cases")
-      .insert({ session_id: sid })
+      .insert({ session_id: user.id, owner_id: user.id })
       .select("id")
       .single();
     if (error || !data) return;
@@ -46,17 +52,22 @@ export default function HomeScreen() {
 
   return (
     <div className="space-y-8">
-      <section className="paper p-8 md:p-10">
+      <section className="paper p-8 md:p-10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 h-32 w-32 opacity-10 -mr-8 -mt-8">
+          <div className="kerala-emblem-large">കേ</div>
+        </div>
         <p className="text-xs uppercase tracking-widest text-accent font-semibold mb-2">
-          Government of India · Note-Sheet Assistant
+          സർക്കാർ · Government of Kerala · Note-Sheet Assistant
         </p>
         <h2 className="font-serif text-3xl md:text-4xl text-primary mb-3">
           Draft official file notings, faster.
         </h2>
         <p className="text-muted-foreground max-w-2xl mb-6 leading-relaxed">
-          Upload PDFs, scans, letters, GOs, circulars and annexures. The assistant reads
-          the record, identifies issues, detects rule references, and drafts precise
-          noting text in proper Government style for your file.
+          Upload PDFs, scans, letters, Government Orders, circulars and annexures.
+          The assistant reads the record, applies your uploaded
+          <strong> Kerala Financial Code</strong>, <strong>Stores Purchase Manual</strong>,
+          <strong> KPWD Manual</strong> and <strong>Finance Department GOs</strong>,
+          and drafts precise note-sheet text in proper Sachivalayam style.
         </p>
         <div className="flex flex-wrap gap-3">
           <Button size="lg" onClick={startNew} className="gap-2">
@@ -65,7 +76,15 @@ export default function HomeScreen() {
           <Button size="lg" variant="outline" asChild>
             <Link to="/history">View History</Link>
           </Button>
+          <Button size="lg" variant="outline" asChild className="gap-2">
+            <Link to="/rule-library"><BookMarked className="h-4 w-4" /> Rule Library ({ruleCount})</Link>
+          </Button>
         </div>
+        {ruleCount === 0 && (
+          <div className="mt-5 text-xs px-3 py-2 rounded-md bg-accent/10 border border-accent/30 text-accent inline-block">
+            ⚠ No rules uploaded yet. Add KFC chapters and key GOs in the Rule Library to enable rule-grounded analysis.
+          </div>
+        )}
       </section>
 
       <section>

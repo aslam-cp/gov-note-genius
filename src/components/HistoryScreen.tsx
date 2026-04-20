@@ -39,7 +39,7 @@ export default function HistoryScreen() {
       <div>
         <Link to="/" className="text-sm text-muted-foreground hover:text-primary">← Home</Link>
         <h2 className="font-serif text-2xl text-primary mt-2">Case History</h2>
-        <p className="text-sm text-muted-foreground">All cases you have drafted on this device.</p>
+        <p className="text-sm text-muted-foreground">All cases drafted under your officer account.</p>
       </div>
 
       {loading ? (
