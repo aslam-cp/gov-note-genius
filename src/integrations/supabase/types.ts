@@ -14,9 +14,40 @@ export type Database = {
   }
   public: {
     Tables: {
+      knowledge_bases: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          is_shared: boolean
+          name: string
+          owner_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_shared?: boolean
+          name: string
+          owner_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_shared?: boolean
+          name?: string
+          owner_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       noting_cases: {
         Row: {
           analysis: Json | null
+          applied_kb_ids: string[]
           context_summary: string
           created_at: string
           custom_instruction: string
@@ -32,6 +63,7 @@ export type Database = {
         }
         Insert: {
           analysis?: Json | null
+          applied_kb_ids?: string[]
           context_summary?: string
           created_at?: string
           custom_instruction?: string
@@ -47,6 +79,7 @@ export type Database = {
         }
         Update: {
           analysis?: Json | null
+          applied_kb_ids?: string[]
           context_summary?: string
           created_at?: string
           custom_instruction?: string
@@ -99,6 +132,39 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "noting_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rule_document_kbs: {
+        Row: {
+          created_at: string
+          knowledge_base_id: string
+          rule_document_id: string
+        }
+        Insert: {
+          created_at?: string
+          knowledge_base_id: string
+          rule_document_id: string
+        }
+        Update: {
+          created_at?: string
+          knowledge_base_id?: string
+          rule_document_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rule_document_kbs_knowledge_base_id_fkey"
+            columns: ["knowledge_base_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_bases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rule_document_kbs_rule_document_id_fkey"
+            columns: ["rule_document_id"]
+            isOneToOne: false
+            referencedRelation: "rule_documents"
             referencedColumns: ["id"]
           },
         ]
