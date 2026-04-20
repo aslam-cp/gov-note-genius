@@ -20,6 +20,8 @@ const VERDICT_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "bad"
   needs_examination: { label: "Requires further examination", tone: "warn" },
 };
 
+interface KB { id: string; name: string }
+
 export default function AnalysisScreen() {
   const { caseId } = useParams({ from: "/case/$caseId/analysis" });
   const navigate = useNavigate();
@@ -32,29 +34,37 @@ export default function AnalysisScreen() {
   const [reference, setReference] = useState("");
   const [notingType, setNotingType] = useState<NotingType>("approve");
   const [customInstruction, setCustomInstruction] = useState("");
-  const [useRuleLibrary, setUseRuleLibrary] = useState(false);
+  const [kbs, setKbs] = useState<KB[]>([]);
+  const [appliedKbIds, setAppliedKbIds] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
-      const { data: c } = await supabase
-        .from("noting_cases")
-        .select("subject,reference,noting_type,custom_instruction,analysis")
-        .eq("id", caseId)
-        .single();
+      const [caseRes, docsRes, kbRes] = await Promise.all([
+        supabase.from("noting_cases")
+          .select("subject,reference,noting_type,custom_instruction,analysis,applied_kb_ids")
+          .eq("id", caseId).single(),
+        supabase.from("noting_documents")
+          .select("file_name,mime_type,storage_path").eq("case_id", caseId),
+        supabase.from("knowledge_bases").select("id,name").order("name"),
+      ]);
+      const c = caseRes.data;
       if (c) {
         setSubject(c.subject || "");
         setReference(c.reference || "");
         setNotingType((c.noting_type as NotingType) || "approve");
         setCustomInstruction(c.custom_instruction || "");
         if (c.analysis) setAnalysis(c.analysis as unknown as CaseAnalysis);
+        setAppliedKbIds((c.applied_kb_ids as string[]) ?? []);
       }
-      const { data: d } = await supabase
-        .from("noting_documents")
-        .select("file_name,mime_type,storage_path")
-        .eq("case_id", caseId);
-      setDocs(d ?? []);
+      setDocs(docsRes.data ?? []);
+      setKbs((kbRes.data ?? []) as KB[]);
     })();
   }, [caseId]);
+
+  const persistKbs = async (next: string[]) => {
+    setAppliedKbIds(next);
+    await supabase.from("noting_cases").update({ applied_kb_ids: next }).eq("id", caseId);
+  };
 
   const runAnalysis = async () => {
     if (docs.length === 0) { toast.error("No documents found for this case."); return; }
@@ -64,7 +74,7 @@ export default function AnalysisScreen() {
         const { data } = supabase.storage.from("noting-docs").getPublicUrl(d.storage_path);
         return { fileName: d.file_name, mimeType: d.mime_type, url: data.publicUrl };
       });
-      const result = await analyzeFn({ data: { documents, useRuleLibrary } });
+      const result = await analyzeFn({ data: { documents, kbIds: appliedKbIds } });
       if ("error" in result) { toast.error(result.error); return; }
       const a = result.analysis as CaseAnalysis;
       setAnalysis(a);
@@ -97,33 +107,61 @@ export default function AnalysisScreen() {
     navigate({ to: "/case/$caseId/noting", params: { caseId } });
   };
 
+  const KbPicker = (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-1.5"><BookMarked className="h-3.5 w-3.5" /> Apply Knowledge Bases</Label>
+        <Link to="/rule-library" className="text-xs text-muted-foreground hover:text-primary">Manage →</Link>
+      </div>
+      {kbs.length === 0 ? (
+        <p className="text-xs text-muted-foreground italic">
+          No knowledge bases yet. <Link to="/rule-library" className="underline">Create one</Link> to ground reasoning in specific rules.
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {kbs.map((k) => {
+            const on = appliedKbIds.includes(k.id);
+            return (
+              <button
+                key={k.id}
+                type="button"
+                onClick={() => persistKbs(on ? appliedKbIds.filter((x) => x !== k.id) : [...appliedKbIds, k.id])}
+                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                  on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-secondary"
+                }`}
+              >
+                {k.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <p className="text-[11px] text-muted-foreground">
+        {appliedKbIds.length === 0
+          ? "No knowledge base will be consulted. Rules will be cited only if they appear in the uploaded documents."
+          : `${appliedKbIds.length} knowledge base(s) will be consulted.`}
+      </p>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div>
         <Link to={`/case/${caseId}/upload` as string} className="text-sm text-muted-foreground hover:text-primary">← Upload</Link>
         <h2 className="font-serif text-2xl text-primary mt-2">Case Analysis</h2>
         <p className="text-sm text-muted-foreground">
-          The assistant will read the uploaded record and prepare a structured analysis with a reasoned recommendation.
+          The assistant will read the uploaded record and prepare a structured analysis from the perspective of the Director / CEO.
         </p>
       </div>
 
       {!analysis && (
-        <div className="paper p-8 text-center">
-          <FileSearch className="h-10 w-10 mx-auto mb-3 text-primary/70" />
-          <p className="mb-4 text-sm text-muted-foreground">
-            {docs.length} document(s) on file. Click below to analyse.
-          </p>
-          <div className="flex flex-col items-center gap-3">
-            <Button
-              type="button"
-              variant={useRuleLibrary ? "default" : "outline"}
-              onClick={() => setUseRuleLibrary((v) => !v)}
-              className="gap-2"
-              size="sm"
-            >
-              <BookMarked className="h-4 w-4" />
-              {useRuleLibrary ? "Knowledge Base: ON" : "Use Knowledge Base (Rule Library)"}
-            </Button>
+        <div className="paper p-8 space-y-5">
+          <div className="text-center">
+            <FileSearch className="h-10 w-10 mx-auto mb-3 text-primary/70" />
+            <p className="text-sm text-muted-foreground">{docs.length} document(s) on file.</p>
+          </div>
+          {KbPicker}
+          <div className="flex justify-center">
             <Button size="lg" onClick={runAnalysis} disabled={loading} className="gap-2">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               {loading ? "Analysing the file…" : "Analyse Case"}
@@ -158,6 +196,8 @@ export default function AnalysisScreen() {
             <Verdict v={analysis.verdict} />
             <p className="text-sm leading-relaxed mt-3">{analysis.recommendation}</p>
           </div>
+
+          <div className="paper p-6 space-y-4">{KbPicker}</div>
 
           <div className="paper p-6 space-y-4">
             <h3 className="font-serif text-lg text-primary">Select Noting Type</h3>
