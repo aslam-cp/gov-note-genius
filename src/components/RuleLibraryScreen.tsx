@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { BookMarked, Upload, Trash2, Loader2, FileText, ToggleLeft, ToggleRight } from "lucide-react";
+import { BookMarked, Upload, Trash2, Loader2, FileText, ToggleLeft, ToggleRight, Plus, Tag } from "lucide-react";
 import { toast } from "sonner";
 
 interface RuleRow {
@@ -24,6 +24,13 @@ interface RuleRow {
   is_active: boolean;
 }
 
+interface KB {
+  id: string;
+  owner_id: string | null;
+  name: string;
+  description: string;
+}
+
 const CATEGORIES = [
   { value: "kfc", label: "Kerala Financial Code (KFC)" },
   { value: "stores_purchase", label: "Stores Purchase Manual" },
@@ -36,22 +43,53 @@ const CATEGORIES = [
 export default function RuleLibraryScreen() {
   const { user } = useAuth();
   const [rows, setRows] = useState<RuleRow[]>([]);
+  const [kbs, setKbs] = useState<KB[]>([]);
+  const [docKbs, setDocKbs] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({ title: "", category: "kfc", reference_no: "", year: "", summary: "" });
+  const [selectedKbIds, setSelectedKbIds] = useState<string[]>([]);
+  const [newKbName, setNewKbName] = useState("");
+  const [newKbDesc, setNewKbDesc] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("rule_documents")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setRows((data ?? []) as RuleRow[]);
+    const [rulesRes, kbRes, linkRes] = await Promise.all([
+      supabase.from("rule_documents").select("*").order("created_at", { ascending: false }),
+      supabase.from("knowledge_bases").select("id,owner_id,name,description").order("name"),
+      supabase.from("rule_document_kbs").select("rule_document_id,knowledge_base_id"),
+    ]);
+    setRows((rulesRes.data ?? []) as RuleRow[]);
+    setKbs((kbRes.data ?? []) as KB[]);
+    const map: Record<string, string[]> = {};
+    for (const l of (linkRes.data ?? []) as { rule_document_id: string; knowledge_base_id: string }[]) {
+      (map[l.rule_document_id] ||= []).push(l.knowledge_base_id);
+    }
+    setDocKbs(map);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
+
+  const createKb = async () => {
+    if (!user || !newKbName.trim()) return;
+    const { error } = await supabase.from("knowledge_bases").insert({
+      owner_id: user.id, name: newKbName.trim(), description: newKbDesc.trim(),
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Knowledge base created");
+    setNewKbName(""); setNewKbDesc("");
+    load();
+  };
+
+  const removeKb = async (kb: KB) => {
+    if (!confirm(`Delete knowledge base "${kb.name}"? Documents are kept; only the grouping is removed.`)) return;
+    const { error } = await supabase.from("knowledge_bases").delete().eq("id", kb.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Knowledge base deleted");
+    load();
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,10 +101,9 @@ export default function RuleLibraryScreen() {
     try {
       const path = `${user.id}/${crypto.randomUUID()}-${file.name}`;
       const { error: upErr } = await supabase.storage
-        .from("rule-library")
-        .upload(path, file, { contentType: file.type, upsert: false });
+        .from("rule-library").upload(path, file, { contentType: file.type, upsert: false });
       if (upErr) throw upErr;
-      const { error: insErr } = await supabase.from("rule_documents").insert({
+      const { data: inserted, error: insErr } = await supabase.from("rule_documents").insert({
         uploader_id: user.id,
         title: form.title,
         category: form.category,
@@ -77,10 +114,16 @@ export default function RuleLibraryScreen() {
         file_name: file.name,
         mime_type: file.type || "application/octet-stream",
         size_bytes: file.size,
-      });
+      }).select("id").single();
       if (insErr) throw insErr;
+      if (selectedKbIds.length > 0 && inserted) {
+        await supabase.from("rule_document_kbs").insert(
+          selectedKbIds.map((kid) => ({ rule_document_id: inserted.id, knowledge_base_id: kid })),
+        );
+      }
       toast.success("Rule document added to the library");
       setForm({ title: "", category: "kfc", reference_no: "", year: "", summary: "" });
+      setSelectedKbIds([]);
       if (fileRef.current) fileRef.current.value = "";
       load();
     } catch (e) {
@@ -103,20 +146,65 @@ export default function RuleLibraryScreen() {
     load();
   };
 
+  const toggleDocKb = async (r: RuleRow, kbId: string) => {
+    const has = (docKbs[r.id] ?? []).includes(kbId);
+    if (has) {
+      await supabase.from("rule_document_kbs")
+        .delete().eq("rule_document_id", r.id).eq("knowledge_base_id", kbId);
+    } else {
+      await supabase.from("rule_document_kbs")
+        .insert({ rule_document_id: r.id, knowledge_base_id: kbId });
+    }
+    load();
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <Link to="/" className="text-sm text-muted-foreground hover:text-primary">← Home</Link>
         <h2 className="font-serif text-2xl text-primary mt-2 flex items-center gap-2">
-          <BookMarked className="h-5 w-5" /> Kerala Rule Library
+          <BookMarked className="h-5 w-5" /> Knowledge Bases & Rule Library
         </h2>
         <p className="text-sm text-muted-foreground">
-          Upload Kerala Financial Code chapters, Stores Purchase Manual, KPWD Manual,
-          Finance Department GOs and Circulars. Active entries are consulted by the
-          assistant when analysing every case.
+          Create one or more named Knowledge Bases (e.g. KFC, Stores Purchase, PWD, Finance GOs).
+          Tag each rule document with the knowledge bases it belongs to. On a case, pick the knowledge bases to apply.
         </p>
       </div>
 
+      {/* Knowledge Base manager */}
+      <div className="paper p-6 space-y-4">
+        <h3 className="font-serif text-sm uppercase tracking-wider text-muted-foreground">Knowledge Bases</h3>
+        <div className="flex flex-wrap gap-2">
+          {kbs.length === 0 && <p className="text-sm text-muted-foreground italic">No knowledge bases yet.</p>}
+          {kbs.map((k) => (
+            <span key={k.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground text-xs">
+              <Tag className="h-3 w-3" /> {k.name}
+              {k.owner_id === user?.id && (
+                <button onClick={() => removeKb(k)} className="ml-1 hover:text-destructive" aria-label="Delete">
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+        <div className="grid md:grid-cols-3 gap-3 items-end">
+          <div className="md:col-span-1">
+            <Label>New KB name</Label>
+            <Input value={newKbName} onChange={(e) => setNewKbName(e.target.value)} placeholder="e.g. KFC Vol I" />
+          </div>
+          <div className="md:col-span-1">
+            <Label>Description (optional)</Label>
+            <Input value={newKbDesc} onChange={(e) => setNewKbDesc(e.target.value)} placeholder="Short description" />
+          </div>
+          <div>
+            <Button onClick={createKb} disabled={!newKbName.trim()} className="gap-2">
+              <Plus className="h-4 w-4" /> Create KB
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Upload form */}
       <form onSubmit={submit} className="paper p-6 grid md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
           <Label>Title</Label>
@@ -145,6 +233,32 @@ export default function RuleLibraryScreen() {
           <Input ref={fileRef} type="file" accept=".pdf,image/*" />
         </div>
         <div className="md:col-span-2">
+          <Label>Tag with knowledge bases</Label>
+          {kbs.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic">Create a knowledge base above first.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2 mt-1">
+              {kbs.map((k) => {
+                const on = selectedKbIds.includes(k.id);
+                return (
+                  <button
+                    key={k.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedKbIds((p) => on ? p.filter((x) => x !== k.id) : [...p, k.id])
+                    }
+                    className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                      on ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-secondary border-border"
+                    }`}
+                  >
+                    {k.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div className="md:col-span-2">
           <Label>Short summary (optional, but recommended)</Label>
           <Textarea
             rows={3}
@@ -161,6 +275,7 @@ export default function RuleLibraryScreen() {
         </div>
       </form>
 
+      {/* Library list */}
       <div className="paper p-4">
         <h3 className="font-serif text-sm uppercase tracking-wider text-muted-foreground mb-3">
           Library entries ({rows.length})
@@ -173,6 +288,7 @@ export default function RuleLibraryScreen() {
           <ul className="divide-y divide-border">
             {rows.map((r) => {
               const isOwner = r.uploader_id === user?.id;
+              const myKbs = docKbs[r.id] ?? [];
               return (
                 <li key={r.id} className="py-3 flex items-start gap-3">
                   <FileText className="h-4 w-4 text-primary shrink-0 mt-1" />
@@ -192,6 +308,26 @@ export default function RuleLibraryScreen() {
                       {r.reference_no || "No ref."} {r.year ? `· ${r.year}` : ""} · {r.file_name} ({(r.size_bytes / 1024).toFixed(0)} KB)
                     </p>
                     {r.summary && <p className="text-xs mt-1 leading-relaxed">{r.summary}</p>}
+                    {kbs.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {kbs.map((k) => {
+                          const on = myKbs.includes(k.id);
+                          return (
+                            <button
+                              key={k.id}
+                              type="button"
+                              disabled={!isOwner}
+                              onClick={() => toggleDocKb(r, k.id)}
+                              className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                                on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border"
+                              } ${isOwner ? "hover:opacity-80 cursor-pointer" : "opacity-60 cursor-not-allowed"}`}
+                            >
+                              {k.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                   {isOwner && (
                     <div className="flex items-center gap-1">
