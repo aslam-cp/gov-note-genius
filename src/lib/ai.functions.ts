@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 
-const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MODEL = "google/gemini-3-flash-preview";
+const MODEL = "gemini-2.0-flash-exp";
+const GATEWAY = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
 
 interface DocBlob {
   fileName: string;
@@ -94,8 +94,8 @@ async function fetchKbBundle(kbIds: string[]): Promise<{ summary: string; docs: 
 }
 
 async function callGateway(body: Record<string, unknown>) {
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
   const res = await fetch(GATEWAY, {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -104,8 +104,7 @@ async function callGateway(body: Record<string, unknown>) {
   if (!res.ok) {
     const text = await res.text();
     if (res.status === 429) throw new Error("Rate limit exceeded. Please try again shortly.");
-    if (res.status === 402) throw new Error("AI credits exhausted. Please add credits in Settings → Workspace → Usage.");
-    throw new Error(`AI gateway error (${res.status}): ${text}`);
+    throw new Error(`Gemini API error (${res.status}): ${text}`);
   }
   return res.json();
 }
