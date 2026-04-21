@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 
-const MODEL = "gemini-2.0-flash-exp";
+const MODEL = "gemini-2.5-flash";
 const GATEWAY = `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`;
 
 interface DocBlob {
