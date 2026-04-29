@@ -1,27 +1,6 @@
-services:
-<<<<<<< HEAD
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_PUBLISHABLE_KEY=${SUPABASE_PUBLISHABLE_KEY}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - PORT=8080
-    restart: always
+version: '3.9'
 
-  proxy:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - web
-    restart: always
-=======
+services:
   app:
     build:
       context: .
@@ -42,9 +21,8 @@ services:
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      test: [ "CMD", "wget", "-qO-", "http://localhost:3000/" ]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 20s
->>>>>>> 59d33e6ce844c2138fc8524648ee25d3ce52da71
