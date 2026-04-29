@@ -106,7 +106,9 @@ Knowledge-base documents are fetched server-side from the Supabase `rule-library
 
 ## Deployment
 
-### Cloudflare Workers (current target)
+For full production deployment instructions — Cloudflare Workers, Docker, and Kubernetes / Jio Cloud — see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+Quick start (Cloudflare Workers, the default target):
 
 ```bash
 wrangler secret put SUPABASE_URL
@@ -115,10 +117,6 @@ wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 wrangler secret put GEMINI_API_KEY
 wrangler deploy
 ```
-
-### Other platforms (Vercel, Node, etc.)
-
-The repo is currently wired specifically for Cloudflare via `wrangler.jsonc` and `@cloudflare/vite-plugin` (bundled inside the `@lovable.dev/vite-tanstack-config` preset). Re-targeting requires replacing the Vite preset with a hand-rolled config using TanStack Start's Node or Vercel server target. Note that `analyzeCase` / `generateNoting` may inline up to ~15 MB per document — Vercel Hobby's 4.5 MB body limit can be a problem; Cloudflare Workers and long-running Node hosts (Railway, Fly, VPS) do not have this constraint.
 
 ## Vite config — important
 
