@@ -1,4 +1,5 @@
 services:
+<<<<<<< HEAD
   web:
     build:
       context: .
@@ -20,3 +21,30 @@ services:
     depends_on:
       - web
     restart: always
+=======
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY}
+    image: gov-note-genius:latest
+    container_name: gov-note-genius
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+>>>>>>> 59d33e6ce844c2138fc8524648ee25d3ce52da71
