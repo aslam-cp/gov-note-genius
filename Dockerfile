@@ -28,7 +28,7 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 # Copy build artifacts and package manifest from builder
-COPY --from=builder /app/.output ./.output
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/package-lock.json ./package-lock.json
 
@@ -38,6 +38,7 @@ RUN npm install --omit=dev
 EXPOSE 3000
 
 # Run the production server
-CMD ["node", ".output/server/index.mjs"]
+CMD ["node", "dist/server/server.js"]
+
 
 
