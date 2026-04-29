@@ -1,7 +1,8 @@
 node_modules
 .git
-<<<<<<< HEAD
 .env
+.env.*
+!.env.example
 .dev.vars
 dist
 .output
@@ -17,22 +18,13 @@ bun.lockb
 eslint.config.js
 tsconfig.json
 supabase
-=======
 .gitignore
-.output
-dist
 .vite
-.env
-.env.*
-!.env.example
 *.log
 .DS_Store
 .vscode
 .idea
-README.md
-AGENTS.md
-CLAUDE.md
 Dockerfile
 docker-compose.yml
 .dockerignore
->>>>>>> 59d33e6ce844c2138fc8524648ee25d3ce52da71
+

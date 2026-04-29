@@ -16,10 +16,13 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY}
       SUPABASE_URL: ${SUPABASE_URL}
       SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+
     healthcheck:
       test: [ "CMD", "wget", "-qO-", "http://localhost:3000/" ]
       interval: 30s
