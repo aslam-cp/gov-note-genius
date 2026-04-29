@@ -1,25 +1,21 @@
-# Stage 1: Build
+# ---------- Builder ----------
 FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install all dependencies (including devDependencies)
+# Copy only package files first (cache-friendly)
 COPY package.json package-lock.json ./
-RUN npm install && npm cache clean --force && rm -rf /root/.npm
 
-# Copy source code
+# Install deps (including dev for build)
+RUN npm install --no-audit --no-fund
+
+# Copy source
 COPY . .
 
-# Build the application
-# Build-time variables for Vite env injection
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_PUBLISHABLE_KEY
-ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
-ENV VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY
-
+# Build app
 RUN npm run build
 
-# Stage 2: Production Runtime
+# ---------- Runner ----------
 FROM node:22-alpine AS runner
 
 WORKDIR /app
@@ -27,21 +23,16 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Copy build artifacts and package manifest from builder
+# Copy only production build
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/package-lock.json ./package-lock.json
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/package-lock.json ./
 
-# Install ONLY production dependencies to keep the final image size minimal
-RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force && rm -rf /root/.npm
+# Install ONLY production deps
+RUN npm install --omit=dev --no-audit --no-fund \
+    && npm cache clean --force \
+    && rm -rf /root/.npm
 
 EXPOSE 3000
 
-# Copy server wrapper
-COPY server-node.mjs ./server-node.mjs
-
-# Run the production server via the wrapper
-CMD ["node", "server-node.mjs"]
-
-
-
+CMD ["node", "dist/server/server.js"]
