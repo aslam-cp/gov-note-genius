@@ -19,22 +19,37 @@ An officer-facing AI assistant that reads Government of Kerala case file documen
 
 ## Environment variables
 
-Create a `.env` (or `.dev.vars` for Wrangler) at the project root:
-
-```ini
-SUPABASE_URL=...
-SUPABASE_PUBLISHABLE_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
-GEMINI_API_KEY=...
-```
-
-`SUPABASE_SERVICE_ROLE_KEY` is server-only — it's used to read rule documents and sign storage URLs. Do not expose it to the browser.
-
-## Install & run
+Copy `.env.example` to `.env` and fill in the values:
 
 ```bash
+cp .env.example .env
+```
+
+Required keys:
+
+| Variable | When | Notes |
+| --- | --- | --- |
+| `VITE_SUPABASE_URL` | build | Inlined into the browser bundle. |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | build | Inlined into the browser bundle. |
+| `SUPABASE_URL` | runtime | Used by the server (auth middleware, AI server fns). |
+| `SUPABASE_PUBLISHABLE_KEY` | runtime | Used by `auth-middleware` to verify JWTs. |
+| `SUPABASE_SERVICE_ROLE_KEY` | runtime | **Server-only.** Reads rule docs, signs storage URLs. Never expose to the browser. |
+| `GEMINI_API_KEY` | runtime | Bearer for the Gemini OpenAI-compatible gateway. |
+
+For Wrangler-based local dev against Cloudflare, the runtime keys go in `.dev.vars` instead. For Docker, the same `.env` is read by `docker-compose.yml`.
+
+## Quick start
+
+```bash
+cp .env.example .env       # fill in real values
 bun install
-bun dev          # http://localhost:8080
+bun dev                    # http://localhost:8080
+```
+
+Run with Docker instead:
+
+```bash
+docker compose up --build  # http://localhost:3000
 ```
 
 Other scripts:
