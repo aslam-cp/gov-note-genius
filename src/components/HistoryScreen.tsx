@@ -7,7 +7,11 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 interface Row {
-  id: string; subject: string; reference: string; status: string; updated_at: string;
+  id: string;
+  subject: string;
+  reference: string;
+  status: string;
+  updated_at: string;
 }
 
 export default function HistoryScreen() {
@@ -27,7 +31,9 @@ export default function HistoryScreen() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    load();
+  }, [user]);
 
   const remove = async (id: string) => {
     if (!confirm("Delete this case and all its documents?")) return;
@@ -39,9 +45,13 @@ export default function HistoryScreen() {
   return (
     <div className="space-y-6">
       <div>
-        <Link to="/" className="text-sm text-muted-foreground hover:text-primary">← Home</Link>
+        <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
+          ← Home
+        </Link>
         <h2 className="font-serif text-2xl text-primary mt-2">Case History</h2>
-        <p className="text-sm text-muted-foreground">All cases drafted under your officer account.</p>
+        <p className="text-sm text-muted-foreground">
+          All cases drafted under your officer account.
+        </p>
       </div>
 
       {loading ? (
@@ -57,14 +67,20 @@ export default function HistoryScreen() {
             <li key={c.id} className="paper p-4 flex items-center gap-3">
               <FileText className="h-5 w-5 text-primary shrink-0" />
               <div className="flex-1 min-w-0">
-                <Link to="/case/$caseId/analysis" params={{ caseId: c.id }} className="font-medium hover:underline truncate block">
+                <Link
+                  to="/case/$caseId/analysis"
+                  params={{ caseId: c.id }}
+                  className="font-medium hover:underline truncate block"
+                >
                   {c.subject}
                 </Link>
                 <p className="text-xs text-muted-foreground truncate">
                   {c.reference || "No reference"} · {new Date(c.updated_at).toLocaleString()}
                 </p>
               </div>
-              <span className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground capitalize">{c.status}</span>
+              <span className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground capitalize">
+                {c.status}
+              </span>
               <Button size="icon" variant="ghost" onClick={() => remove(c.id)} aria-label="Delete">
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>

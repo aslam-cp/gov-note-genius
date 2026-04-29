@@ -62,7 +62,9 @@ export default function AuthScreen() {
         <div className="paper p-8 w-full max-w-md">
           <div className="flex items-center gap-2 mb-1 text-accent">
             <ShieldCheck className="h-4 w-4" />
-            <span className="text-xs uppercase tracking-widest font-semibold">For Official Use Only</span>
+            <span className="text-xs uppercase tracking-widest font-semibold">
+              For Official Use Only
+            </span>
           </div>
           <h2 className="font-serif text-2xl text-primary mb-1">
             {mode === "login" ? "Officer Sign In" : "Create Officer Account"}
@@ -77,28 +79,63 @@ export default function AuthScreen() {
             {mode === "signup" && (
               <div>
                 <Label htmlFor="name">Officer name (designation)</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Sri/Smt. Name, Designation" />
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Sri/Smt. Name, Designation"
+                />
               </div>
             )}
             <div>
               <Label htmlFor="email">Official email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="officer@kerala.gov.in" />
+              <Input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="officer@kerala.gov.in"
+              />
             </div>
             <div>
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} />
+              <Input
+                id="password"
+                type="password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
               <p className="text-xs text-muted-foreground mt-1">Minimum 8 characters.</p>
             </div>
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "login" ? "Sign In" : "Create Account"}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : mode === "login" ? (
+                "Sign In"
+              ) : (
+                "Create Account"
+              )}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             {mode === "login" ? (
-              <>New officer? <button className="text-primary hover:underline" onClick={() => setMode("signup")}>Create account</button></>
+              <>
+                New officer?{" "}
+                <button className="text-primary hover:underline" onClick={() => setMode("signup")}>
+                  Create account
+                </button>
+              </>
             ) : (
-              <>Already registered? <button className="text-primary hover:underline" onClick={() => setMode("login")}>Sign in</button></>
+              <>
+                Already registered?{" "}
+                <button className="text-primary hover:underline" onClick={() => setMode("login")}>
+                  Sign in
+                </button>
+              </>
             )}
           </div>
         </div>

@@ -11,13 +11,11 @@ wrangler.jsonc
 README.md
 AGENTS.md
 CLAUDE.md
-package-lock.json
-bun.lockb
 .prettierrc
 .prettierignore
 eslint.config.js
-tsconfig.json
 supabase
+
 .gitignore
 .vite
 *.log

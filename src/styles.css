@@ -74,7 +74,7 @@
   --primary: oklch(0.35 0.12 250);
   --primary-foreground: oklch(0.985 0.005 240);
   --secondary: oklch(0.94 0.018 240);
-  --secondary-foreground: oklch(0.30 0.10 250);
+  --secondary-foreground: oklch(0.3 0.1 250);
   --muted: oklch(0.95 0.012 240);
   --muted-foreground: oklch(0.48 0.03 250);
   /* Accent: teal */
@@ -85,12 +85,12 @@
   --border: oklch(0.88 0.015 240);
   --input: oklch(0.92 0.014 240);
   --ring: oklch(0.5 0.12 250);
-  --gradient-header: linear-gradient(135deg, oklch(0.30 0.12 250), oklch(0.40 0.13 230));
+  --gradient-header: linear-gradient(135deg, oklch(0.3 0.12 250), oklch(0.4 0.13 230));
   --gradient-accent: linear-gradient(135deg, oklch(0.62 0.13 195), oklch(0.55 0.14 215));
   --shadow-paper: 0 1px 2px oklch(0.2 0.05 250 / 0.06), 0 8px 24px oklch(0.2 0.05 250 / 0.05);
-  --shadow-elevated: 0 4px 12px oklch(0.2 0.05 250 / 0.10), 0 16px 40px oklch(0.2 0.05 250 / 0.08);
-  --font-serif: 'Source Serif 4', 'Georgia', serif;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --shadow-elevated: 0 4px 12px oklch(0.2 0.05 250 / 0.1), 0 16px 40px oklch(0.2 0.05 250 / 0.08);
+  --font-serif: "Source Serif 4", "Georgia", serif;
+  --font-sans: "Inter", system-ui, sans-serif;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -155,12 +155,14 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    background-image:
-      radial-gradient(oklch(0.5 0.04 250 / 0.04) 1px, transparent 1px);
+    background-image: radial-gradient(oklch(0.5 0.04 250 / 0.04) 1px, transparent 1px);
     background-size: 24px 24px;
   }
 
-  h1, h2, h3, .font-serif {
+  h1,
+  h2,
+  h3,
+  .font-serif {
     font-family: var(--font-serif);
     letter-spacing: -0.01em;
   }

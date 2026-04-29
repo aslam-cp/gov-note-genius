@@ -32,20 +32,44 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Government of Kerala — File Noting Assistant" },
-      { name: "description", content: "Government of Kerala officer-only AI drafting aid. Reads file documents, applies KFC, Stores Purchase Manual, KPWD Manual and Finance Department GOs, and drafts official note-sheet text." },
+      {
+        name: "description",
+        content:
+          "Government of Kerala officer-only AI drafting aid. Reads file documents, applies KFC, Stores Purchase Manual, KPWD Manual and Finance Department GOs, and drafts official note-sheet text.",
+      },
       { property: "og:title", content: "Government of Kerala — File Noting Assistant" },
       { name: "twitter:title", content: "Government of Kerala — File Noting Assistant" },
-      { property: "og:description", content: "Officer-only AI drafting aid grounded in Kerala Financial Code, Stores Purchase Manual, KPWD Manual and Finance Department orders." },
-      { name: "twitter:description", content: "Officer-only AI drafting aid grounded in Kerala Financial Code, Stores Purchase Manual, KPWD Manual and Finance Department orders." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/da220fd7-2bc6-464f-b1b5-efaef1efa099/id-preview-c0fd6499--de6b7916-5760-4aa9-8948-1e2fd27945a5.lovable.app-1776656672454.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/da220fd7-2bc6-464f-b1b5-efaef1efa099/id-preview-c0fd6499--de6b7916-5760-4aa9-8948-1e2fd27945a5.lovable.app-1776656672454.png" },
+      {
+        property: "og:description",
+        content:
+          "Officer-only AI drafting aid grounded in Kerala Financial Code, Stores Purchase Manual, KPWD Manual and Finance Department orders.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Officer-only AI drafting aid grounded in Kerala Financial Code, Stores Purchase Manual, KPWD Manual and Finance Department orders.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/da220fd7-2bc6-464f-b1b5-efaef1efa099/id-preview-c0fd6499--de6b7916-5760-4aa9-8948-1e2fd27945a5.lovable.app-1776656672454.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/da220fd7-2bc6-464f-b1b5-efaef1efa099/id-preview-c0fd6499--de6b7916-5760-4aa9-8948-1e2fd27945a5.lovable.app-1776656672454.png",
+      },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
     ],
-    links: [{ rel: "stylesheet", href: appCss },
+    links: [
+      { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=Inter:wght@400;500;600&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -56,7 +80,9 @@ export const Route = createRootRoute({
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head><HeadContent /></head>
+      <head>
+        <HeadContent />
+      </head>
       <body>
         {children}
         <Scripts />

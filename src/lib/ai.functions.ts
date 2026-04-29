@@ -38,24 +38,29 @@ interface RuleEntry {
   mime_type: string;
 }
 
-async function fetchKbBundle(kbIds: string[]): Promise<{ summary: string; docs: DocBlob[]; kbNames: string[] }> {
+async function fetchKbBundle(
+  kbIds: string[],
+): Promise<{ summary: string; docs: DocBlob[]; kbNames: string[] }> {
   if (!kbIds || kbIds.length === 0) return { summary: "", docs: [], kbNames: [] };
   try {
     const admin = getAdminClient();
 
-    const { data: kbRows } = await admin
-      .from("knowledge_bases")
-      .select("id,name")
-      .in("id", kbIds);
+    const { data: kbRows } = await admin.from("knowledge_bases").select("id,name").in("id", kbIds);
     const kbNames = (kbRows ?? []).map((k: { name: string }) => k.name);
 
     const { data: links } = await admin
       .from("rule_document_kbs")
       .select("rule_document_id")
       .in("knowledge_base_id", kbIds);
-    const docIds = Array.from(new Set((links ?? []).map((l: { rule_document_id: string }) => l.rule_document_id)));
+    const docIds = Array.from(
+      new Set((links ?? []).map((l: { rule_document_id: string }) => l.rule_document_id)),
+    );
     if (docIds.length === 0) {
-      return { summary: `Selected knowledge bases (${kbNames.join(", ")}) contain no documents.`, docs: [], kbNames };
+      return {
+        summary: `Selected knowledge bases (${kbNames.join(", ")}) contain no documents.`,
+        docs: [],
+        kbNames,
+      };
     }
 
     const { data } = await admin
@@ -65,7 +70,8 @@ async function fetchKbBundle(kbIds: string[]): Promise<{ summary: string; docs: 
       .eq("is_active", true)
       .limit(30);
     const rules = (data ?? []) as RuleEntry[];
-    if (rules.length === 0) return { summary: `Selected knowledge bases have no active documents.`, docs: [], kbNames };
+    if (rules.length === 0)
+      return { summary: `Selected knowledge bases have no active documents.`, docs: [], kbNames };
 
     const summary = rules
       .map((r, i) => {
@@ -83,7 +89,11 @@ async function fetchKbBundle(kbIds: string[]): Promise<{ summary: string; docs: 
         .from("rule-library")
         .createSignedUrl(r.storage_path, 60 * 10);
       if (signed?.signedUrl) {
-        docs.push({ fileName: `[RULE] ${r.title} — ${r.file_name}`, mimeType: r.mime_type, url: signed.signedUrl });
+        docs.push({
+          fileName: `[RULE] ${r.title} — ${r.file_name}`,
+          mimeType: r.mime_type,
+          url: signed.signedUrl,
+        });
       }
     }
     return { summary, docs, kbNames };
@@ -133,7 +143,10 @@ async function buildContentParts(prompt: string, docs: DocBlob[]) {
   for (const d of docs) {
     const dataUrl = await fetchAsDataUrl(d.url, d.mimeType);
     if (!dataUrl) {
-      parts.push({ type: "text", text: `\n[Could not load attached document: ${d.fileName} (${d.mimeType})]` });
+      parts.push({
+        type: "text",
+        text: `\n[Could not load attached document: ${d.fileName} (${d.mimeType})]`,
+      });
       continue;
     }
     if (d.mimeType.startsWith("image/") || d.mimeType === "application/pdf") {
@@ -207,18 +220,32 @@ const ANALYSIS_TOOL = {
           ],
         },
       },
-      required: ["subject", "reference", "brief", "facts", "issues", "deficiencies", "rules", "recommendation", "verdict"],
+      required: [
+        "subject",
+        "reference",
+        "brief",
+        "facts",
+        "issues",
+        "deficiencies",
+        "rules",
+        "recommendation",
+        "verdict",
+      ],
       additionalProperties: false,
     },
   },
 } as const;
 
 export const analyzeCase = createServerFn({ method: "POST" })
-  .inputValidator((data: { documents: DocBlob[]; extractedText?: string; kbIds?: string[] }) => data)
+  .inputValidator(
+    (data: { documents: DocBlob[]; extractedText?: string; kbIds?: string[] }) => data,
+  )
   .handler(async ({ data }) => {
     const kbIds = data.kbIds ?? [];
     const useLib = kbIds.length > 0;
-    const library = useLib ? await fetchKbBundle(kbIds) : { summary: "", docs: [] as DocBlob[], kbNames: [] };
+    const library = useLib
+      ? await fetchKbBundle(kbIds)
+      : { summary: "", docs: [] as DocBlob[], kbNames: [] };
     const allDocs: DocBlob[] = [...data.documents, ...library.docs];
 
     const libBlock = useLib
@@ -264,32 +291,39 @@ const NOTING_GUIDANCE: Record<string, string> = {
 };
 
 export const generateNoting = createServerFn({ method: "POST" })
-  .inputValidator((data: {
-    documents: DocBlob[];
-    extractedText?: string;
-    analysis: unknown;
-    notingType: string;
-    customInstruction?: string;
-    refinement?: "shorter" | "longer" | "more_formal" | "stronger_rules" | "regenerate" | null;
-    previousNote?: string;
-    kbIds?: string[];
-  }) => data)
+  .inputValidator(
+    (data: {
+      documents: DocBlob[];
+      extractedText?: string;
+      analysis: unknown;
+      notingType: string;
+      customInstruction?: string;
+      refinement?: "shorter" | "longer" | "more_formal" | "stronger_rules" | "regenerate" | null;
+      previousNote?: string;
+      kbIds?: string[];
+    }) => data,
+  )
   .handler(async ({ data }) => {
     const guidance = NOTING_GUIDANCE[data.notingType] ?? NOTING_GUIDANCE.other;
     const refineMap: Record<string, string> = {
-      shorter: "Make the previous noting shorter and more concise while keeping all essential reasoning.",
+      shorter:
+        "Make the previous noting shorter and more concise while keeping all essential reasoning.",
       longer: "Expand the previous noting with fuller reasoning and richer official phrasing.",
       more_formal: "Rewrite the previous noting in a more formal, classical Government style.",
-      stronger_rules: "Rewrite the previous noting with stronger rule-based reasoning, citing detected GOs, rules and circulars more emphatically (only those actually present in the case documents or applied knowledge bases).",
+      stronger_rules:
+        "Rewrite the previous noting with stronger rule-based reasoning, citing detected GOs, rules and circulars more emphatically (only those actually present in the case documents or applied knowledge bases).",
       regenerate: "Regenerate a fresh draft from the analysis and documents.",
     };
-    const refine = data.refinement && data.previousNote
-      ? `\n\nThe previous draft was:\n---\n${data.previousNote}\n---\n${refineMap[data.refinement] ?? ""}`
-      : "";
+    const refine =
+      data.refinement && data.previousNote
+        ? `\n\nThe previous draft was:\n---\n${data.previousNote}\n---\n${refineMap[data.refinement] ?? ""}`
+        : "";
 
     const kbIds = data.kbIds ?? [];
     const useLib = kbIds.length > 0;
-    const library = useLib ? await fetchKbBundle(kbIds) : { summary: "", docs: [] as DocBlob[], kbNames: [] };
+    const library = useLib
+      ? await fetchKbBundle(kbIds)
+      : { summary: "", docs: [] as DocBlob[], kbNames: [] };
     const allDocs: DocBlob[] = [...data.documents, ...library.docs];
 
     const libBlock = useLib

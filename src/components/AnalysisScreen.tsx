@@ -5,7 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { analyzeCase } from "@/lib/ai.functions";
 import { Button } from "@/components/ui/button";
 import { CaseAnalysis, NOTING_OPTIONS, NotingType } from "@/lib/noting-types";
-import { Loader2, Sparkles, ArrowRight, AlertTriangle, CheckCircle2, FileSearch, BookMarked } from "lucide-react";
+import {
+  Loader2,
+  Sparkles,
+  ArrowRight,
+  AlertTriangle,
+  CheckCircle2,
+  FileSearch,
+  BookMarked,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -20,14 +28,19 @@ const VERDICT_LABEL: Record<string, { label: string; tone: "ok" | "warn" | "bad"
   needs_examination: { label: "Requires further examination", tone: "warn" },
 };
 
-interface KB { id: string; name: string }
+interface KB {
+  id: string;
+  name: string;
+}
 
 export default function AnalysisScreen() {
   const { caseId } = useParams({ from: "/case/$caseId/analysis" });
   const navigate = useNavigate();
   const analyzeFn = useServerFn(analyzeCase);
 
-  const [docs, setDocs] = useState<Array<{ file_name: string; mime_type: string; storage_path: string }>>([]);
+  const [docs, setDocs] = useState<
+    Array<{ file_name: string; mime_type: string; storage_path: string }>
+  >([]);
   const [analysis, setAnalysis] = useState<CaseAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [subject, setSubject] = useState("");
@@ -40,11 +53,15 @@ export default function AnalysisScreen() {
   useEffect(() => {
     (async () => {
       const [caseRes, docsRes, kbRes] = await Promise.all([
-        supabase.from("noting_cases")
+        supabase
+          .from("noting_cases")
           .select("subject,reference,noting_type,custom_instruction,analysis,applied_kb_ids")
-          .eq("id", caseId).single(),
-        supabase.from("noting_documents")
-          .select("file_name,mime_type,storage_path").eq("case_id", caseId),
+          .eq("id", caseId)
+          .single(),
+        supabase
+          .from("noting_documents")
+          .select("file_name,mime_type,storage_path")
+          .eq("case_id", caseId),
         supabase.from("knowledge_bases").select("id,name").order("name"),
       ]);
       const c = caseRes.data;
@@ -67,7 +84,10 @@ export default function AnalysisScreen() {
   };
 
   const runAnalysis = async () => {
-    if (docs.length === 0) { toast.error("No documents found for this case."); return; }
+    if (docs.length === 0) {
+      toast.error("No documents found for this case.");
+      return;
+    }
     setLoading(true);
     try {
       const documents = docs.map((d) => {
@@ -75,7 +95,10 @@ export default function AnalysisScreen() {
         return { fileName: d.file_name, mimeType: d.mime_type, url: data.publicUrl };
       });
       const result = await analyzeFn({ data: { documents, kbIds: appliedKbIds } });
-      if ("error" in result) { toast.error(result.error); return; }
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
       const a = result.analysis as CaseAnalysis;
       setAnalysis(a);
       setSubject(a.subject);
@@ -99,10 +122,18 @@ export default function AnalysisScreen() {
   };
 
   const goToNoting = async () => {
-    if (!analysis) { toast.error("Please run analysis first."); return; }
+    if (!analysis) {
+      toast.error("Please run analysis first.");
+      return;
+    }
     await supabase
       .from("noting_cases")
-      .update({ subject, reference, noting_type: notingType, custom_instruction: customInstruction })
+      .update({
+        subject,
+        reference,
+        noting_type: notingType,
+        custom_instruction: customInstruction,
+      })
       .eq("id", caseId);
     navigate({ to: "/case/$caseId/noting", params: { caseId } });
   };
@@ -110,12 +141,20 @@ export default function AnalysisScreen() {
   const KbPicker = (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-1.5"><BookMarked className="h-3.5 w-3.5" /> Apply Knowledge Bases</Label>
-        <Link to="/rule-library" className="text-xs text-muted-foreground hover:text-primary">Manage →</Link>
+        <Label className="flex items-center gap-1.5">
+          <BookMarked className="h-3.5 w-3.5" /> Apply Knowledge Bases
+        </Label>
+        <Link to="/rule-library" className="text-xs text-muted-foreground hover:text-primary">
+          Manage →
+        </Link>
       </div>
       {kbs.length === 0 ? (
         <p className="text-xs text-muted-foreground italic">
-          No knowledge bases yet. <Link to="/rule-library" className="underline">Create one</Link> to ground reasoning in specific rules.
+          No knowledge bases yet.{" "}
+          <Link to="/rule-library" className="underline">
+            Create one
+          </Link>{" "}
+          to ground reasoning in specific rules.
         </p>
       ) : (
         <div className="flex flex-wrap gap-2">
@@ -125,9 +164,13 @@ export default function AnalysisScreen() {
               <button
                 key={k.id}
                 type="button"
-                onClick={() => persistKbs(on ? appliedKbIds.filter((x) => x !== k.id) : [...appliedKbIds, k.id])}
+                onClick={() =>
+                  persistKbs(on ? appliedKbIds.filter((x) => x !== k.id) : [...appliedKbIds, k.id])
+                }
                 className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                  on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-secondary"
+                  on
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background border-border hover:bg-secondary"
                 }`}
               >
                 {k.name}
@@ -147,10 +190,16 @@ export default function AnalysisScreen() {
   return (
     <div className="space-y-6">
       <div>
-        <Link to={`/case/${caseId}/upload` as string} className="text-sm text-muted-foreground hover:text-primary">← Upload</Link>
+        <Link
+          to={`/case/${caseId}/upload` as string}
+          className="text-sm text-muted-foreground hover:text-primary"
+        >
+          ← Upload
+        </Link>
         <h2 className="font-serif text-2xl text-primary mt-2">Case Analysis</h2>
         <p className="text-sm text-muted-foreground">
-          The assistant will read the uploaded record and prepare a structured analysis from the perspective of the Director / CEO.
+          The assistant will read the uploaded record and prepare a structured analysis from the
+          perspective of the Director / CEO.
         </p>
       </div>
 
@@ -163,7 +212,11 @@ export default function AnalysisScreen() {
           {KbPicker}
           <div className="flex justify-center">
             <Button size="lg" onClick={runAnalysis} disabled={loading} className="gap-2">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
               {loading ? "Analysing the file…" : "Analyse Case"}
             </Button>
           </div>
@@ -186,13 +239,23 @@ export default function AnalysisScreen() {
           <Section title="A. Brief of the Case">
             <p className="text-sm leading-relaxed">{analysis.brief}</p>
           </Section>
-          <Section title="B. Key Facts on Record"><BulletList items={analysis.facts} /></Section>
-          <Section title="C. Issues Requiring Consideration"><BulletList items={analysis.issues} /></Section>
-          <Section title="D. Deficiencies / Gaps"><BulletList items={analysis.deficiencies} icon="warn" /></Section>
-          <Section title="E. Relevant Rules / Orders / Instructions"><BulletList items={analysis.rules} /></Section>
+          <Section title="B. Key Facts on Record">
+            <BulletList items={analysis.facts} />
+          </Section>
+          <Section title="C. Issues Requiring Consideration">
+            <BulletList items={analysis.issues} />
+          </Section>
+          <Section title="D. Deficiencies / Gaps">
+            <BulletList items={analysis.deficiencies} icon="warn" />
+          </Section>
+          <Section title="E. Relevant Rules / Orders / Instructions">
+            <BulletList items={analysis.rules} />
+          </Section>
 
           <div className="paper p-6">
-            <h3 className="font-serif text-sm uppercase tracking-wider text-muted-foreground mb-3">F. Recommendation</h3>
+            <h3 className="font-serif text-sm uppercase tracking-wider text-muted-foreground mb-3">
+              F. Recommendation
+            </h3>
             <Verdict v={analysis.verdict} />
             <p className="text-sm leading-relaxed mt-3">{analysis.recommendation}</p>
           </div>
@@ -206,7 +269,9 @@ export default function AnalysisScreen() {
                 <label
                   key={o.value}
                   className={`flex items-start gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
-                    notingType === o.value ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"
+                    notingType === o.value
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-secondary/50"
                   }`}
                 >
                   <input
@@ -252,14 +317,17 @@ export default function AnalysisScreen() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="paper p-6">
-      <h3 className="font-serif text-sm uppercase tracking-wider text-muted-foreground mb-3">{title}</h3>
+      <h3 className="font-serif text-sm uppercase tracking-wider text-muted-foreground mb-3">
+        {title}
+      </h3>
       {children}
     </div>
   );
 }
 
 function BulletList({ items, icon }: { items: string[]; icon?: "warn" }) {
-  if (!items?.length) return <p className="text-sm text-muted-foreground italic">— None recorded.</p>;
+  if (!items?.length)
+    return <p className="text-sm text-muted-foreground italic">— None recorded.</p>;
   return (
     <ul className="space-y-2">
       {items.map((it, i) => (
@@ -282,11 +350,17 @@ function Verdict({ v }: { v: string }) {
     meta.tone === "ok"
       ? "bg-primary/10 text-primary border-primary/30"
       : meta.tone === "bad"
-      ? "bg-destructive/10 text-destructive border-destructive/30"
-      : "bg-accent/10 text-accent border-accent/30";
+        ? "bg-destructive/10 text-destructive border-destructive/30"
+        : "bg-accent/10 text-accent border-accent/30";
   return (
-    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium ${cls}`}>
-      {meta.tone === "ok" ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+    <span
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium ${cls}`}
+    >
+      {meta.tone === "ok" ? (
+        <CheckCircle2 className="h-4 w-4" />
+      ) : (
+        <AlertTriangle className="h-4 w-4" />
+      )}
       {meta.label}
     </span>
   );

@@ -27,14 +27,14 @@ cp .env.example .env
 
 Required keys:
 
-| Variable | When | Notes |
-| --- | --- | --- |
-| `VITE_SUPABASE_URL` | build | Inlined into the browser bundle. |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | build | Inlined into the browser bundle. |
-| `SUPABASE_URL` | runtime | Used by the server (auth middleware, AI server fns). |
-| `SUPABASE_PUBLISHABLE_KEY` | runtime | Used by `auth-middleware` to verify JWTs. |
-| `SUPABASE_SERVICE_ROLE_KEY` | runtime | **Server-only.** Reads rule docs, signs storage URLs. Never expose to the browser. |
-| `GEMINI_API_KEY` | runtime | Bearer for the Gemini OpenAI-compatible gateway. |
+| Variable                        | When    | Notes                                                                              |
+| ------------------------------- | ------- | ---------------------------------------------------------------------------------- |
+| `VITE_SUPABASE_URL`             | build   | Inlined into the browser bundle.                                                   |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | build   | Inlined into the browser bundle.                                                   |
+| `SUPABASE_URL`                  | runtime | Used by the server (auth middleware, AI server fns).                               |
+| `SUPABASE_PUBLISHABLE_KEY`      | runtime | Used by `auth-middleware` to verify JWTs.                                          |
+| `SUPABASE_SERVICE_ROLE_KEY`     | runtime | **Server-only.** Reads rule docs, signs storage URLs. Never expose to the browser. |
+| `GEMINI_API_KEY`                | runtime | Bearer for the Gemini OpenAI-compatible gateway.                                   |
 
 For Wrangler-based local dev against Cloudflare, the runtime keys go in `.dev.vars` instead. For Docker, the same `.env` is read by `docker-compose.yml`.
 

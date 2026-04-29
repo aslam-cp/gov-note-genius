@@ -29,7 +29,9 @@ export default function UploadScreen() {
     setDocs(data ?? []);
   };
 
-  useEffect(() => { refresh(); }, [caseId]);
+  useEffect(() => {
+    refresh();
+  }, [caseId]);
 
   const onFiles = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -40,7 +42,10 @@ export default function UploadScreen() {
         const { error: upErr } = await supabase.storage
           .from("noting-docs")
           .upload(path, f, { contentType: f.type, upsert: false });
-        if (upErr) { toast.error(`Upload failed: ${f.name}`); continue; }
+        if (upErr) {
+          toast.error(`Upload failed: ${f.name}`);
+          continue;
+        }
         const { error: insErr } = await supabase.from("noting_documents").insert({
           case_id: caseId,
           storage_path: path,
@@ -65,17 +70,23 @@ export default function UploadScreen() {
   };
 
   const proceed = () => {
-    if (docs.length === 0) { toast.error("Please upload at least one document."); return; }
+    if (docs.length === 0) {
+      toast.error("Please upload at least one document.");
+      return;
+    }
     navigate({ to: "/case/$caseId/analysis", params: { caseId } });
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <Link to="/" className="text-sm text-muted-foreground hover:text-primary">← Home</Link>
+        <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
+          ← Home
+        </Link>
         <h2 className="font-serif text-2xl text-primary mt-2">Upload File Documents</h2>
         <p className="text-sm text-muted-foreground">
-          Add PDFs, scanned pages, screenshots, letters, Government Orders, circulars, note sheets, reports or annexures relevant to this case.
+          Add PDFs, scanned pages, screenshots, letters, Government Orders, circulars, note sheets,
+          reports or annexures relevant to this case.
         </p>
       </div>
 
@@ -83,7 +94,10 @@ export default function UploadScreen() {
         className="paper p-10 border-2 border-dashed border-border text-center cursor-pointer hover:border-primary/50 transition-colors"
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => { e.preventDefault(); onFiles(e.dataTransfer.files); }}
+        onDrop={(e) => {
+          e.preventDefault();
+          onFiles(e.dataTransfer.files);
+        }}
       >
         <Upload className="h-10 w-10 mx-auto mb-3 text-primary/70" />
         <p className="font-medium">Click to browse or drag files here</p>

@@ -31,7 +31,10 @@ export default function HomeScreen() {
           .eq("owner_id", user.id)
           .order("updated_at", { ascending: false })
           .limit(5),
-        supabase.from("rule_documents").select("id", { count: "exact", head: true }).eq("is_active", true),
+        supabase
+          .from("rule_documents")
+          .select("id", { count: "exact", head: true })
+          .eq("is_active", true),
       ]);
       setRecent(cases ?? []);
       setRuleCount(count ?? 0);
@@ -63,11 +66,11 @@ export default function HomeScreen() {
           Draft official file notings, faster.
         </h2>
         <p className="text-muted-foreground max-w-2xl mb-6 leading-relaxed">
-          Upload PDFs, scans, letters, Government Orders, circulars and annexures.
-          The assistant reads the record, applies your uploaded
+          Upload PDFs, scans, letters, Government Orders, circulars and annexures. The assistant
+          reads the record, applies your uploaded
           <strong> Kerala Financial Code</strong>, <strong>Stores Purchase Manual</strong>,
-          <strong> KPWD Manual</strong> and <strong>Finance Department GOs</strong>,
-          and drafts precise note-sheet text in proper Sachivalayam style.
+          <strong> KPWD Manual</strong> and <strong>Finance Department GOs</strong>, and drafts
+          precise note-sheet text in proper Sachivalayam style.
         </p>
         <div className="flex flex-wrap gap-3">
           <Button size="lg" onClick={startNew} className="gap-2">
@@ -77,12 +80,15 @@ export default function HomeScreen() {
             <Link to="/history">View History</Link>
           </Button>
           <Button size="lg" variant="outline" asChild className="gap-2">
-            <Link to="/rule-library"><BookMarked className="h-4 w-4" /> Rule Library ({ruleCount})</Link>
+            <Link to="/rule-library">
+              <BookMarked className="h-4 w-4" /> Rule Library ({ruleCount})
+            </Link>
           </Button>
         </div>
         {ruleCount === 0 && (
           <div className="mt-5 text-xs px-3 py-2 rounded-md bg-accent/10 border border-accent/30 text-accent inline-block">
-            ⚠ No rules uploaded yet. Add KFC chapters and key GOs in the Rule Library to enable rule-grounded analysis.
+            ⚠ No rules uploaded yet. Add KFC chapters and key GOs in the Rule Library to enable
+            rule-grounded analysis.
           </div>
         )}
       </section>
@@ -116,7 +122,8 @@ export default function HomeScreen() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{c.subject}</p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {c.reference || "No reference yet"} · {new Date(c.updated_at).toLocaleString()}
+                      {c.reference || "No reference yet"} ·{" "}
+                      {new Date(c.updated_at).toLocaleString()}
                     </p>
                   </div>
                   <span className="text-xs px-2 py-1 rounded-full bg-secondary text-secondary-foreground capitalize">

@@ -1,9 +1,4 @@
-export type NotingType =
-  | "approve"
-  | "reject"
-  | "putup_positive"
-  | "putup_negative"
-  | "other";
+export type NotingType = "approve" | "reject" | "putup_positive" | "putup_negative" | "other";
 
 export const NOTING_OPTIONS: { value: NotingType; label: string; hint: string }[] = [
   {

@@ -6,12 +6,12 @@ This document describes how to deploy the Government of Kerala File Noting Assis
 
 ## 1. Deployment targets at a glance
 
-| Target | Runtime | Notes |
-| --- | --- | --- |
-| Cloudflare Workers | Workers (V8 isolates) | Default. No body-size headaches. Configured via `wrangler.jsonc`. |
-| Docker (single VM) | Node 22 | Smallest footprint. Good for staging and small-scale prod. |
-| Kubernetes / JCS JKE | Node 22 in container | Recommended for HA prod. |
-| Vercel / generic Node host | Node 22 | Mind the request-body cap on the platform — uploads can reach 15 MB. |
+| Target                     | Runtime               | Notes                                                                |
+| -------------------------- | --------------------- | -------------------------------------------------------------------- |
+| Cloudflare Workers         | Workers (V8 isolates) | Default. No body-size headaches. Configured via `wrangler.jsonc`.    |
+| Docker (single VM)         | Node 22               | Smallest footprint. Good for staging and small-scale prod.           |
+| Kubernetes / JCS JKE       | Node 22 in container  | Recommended for HA prod.                                             |
+| Vercel / generic Node host | Node 22               | Mind the request-body cap on the platform — uploads can reach 15 MB. |
 
 The AI pipeline inlines case documents up to ~15 MB each as base64 in the request to Gemini. Any host with a small request-body cap (Vercel Hobby = 4.5 MB) will fail uploads. Workers, Node behind nginx (with `client_max_body_size` raised), and Kubernetes ingresses are all fine.
 
@@ -21,18 +21,18 @@ The AI pipeline inlines case documents up to ~15 MB each as base64 in the reques
 
 These must be present at runtime on the server:
 
-| Variable | Purpose | Exposure |
-| --- | --- | --- |
-| `SUPABASE_URL` | Supabase project URL | server |
-| `SUPABASE_PUBLISHABLE_KEY` | Supabase anon key, used by `auth-middleware` for token verification | server |
+| Variable                    | Purpose                                                                          | Exposure                                |
+| --------------------------- | -------------------------------------------------------------------------------- | --------------------------------------- |
+| `SUPABASE_URL`              | Supabase project URL                                                             | server                                  |
+| `SUPABASE_PUBLISHABLE_KEY`  | Supabase anon key, used by `auth-middleware` for token verification              | server                                  |
 | `SUPABASE_SERVICE_ROLE_KEY` | Privileged key used by `ai.functions.ts` to read rule docs and sign storage URLs | **server only — never ship to browser** |
-| `GEMINI_API_KEY` | Bearer for the Gemini OpenAI-compatible gateway | server |
+| `GEMINI_API_KEY`            | Bearer for the Gemini OpenAI-compatible gateway                                  | server                                  |
 
 These are required at **build time** (Vite inlines them into the client bundle):
 
-| Variable | Purpose |
-| --- | --- |
-| `VITE_SUPABASE_URL` | Same as `SUPABASE_URL`, but baked into the browser bundle |
+| Variable                        | Purpose                                                           |
+| ------------------------------- | ----------------------------------------------------------------- |
+| `VITE_SUPABASE_URL`             | Same as `SUPABASE_URL`, but baked into the browser bundle         |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Same as `SUPABASE_PUBLISHABLE_KEY`, baked into the browser bundle |
 
 In Docker, build-time vars must be passed via `--build-arg` (see compose file). Setting them only at `docker run` time will not affect the already-baked frontend.
@@ -91,12 +91,7 @@ import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  plugins: [
-    tsconfigPaths(),
-    tailwindcss(),
-    tanstackStart({ target: "node-server" }),
-    viteReact(),
-  ],
+  plugins: [tsconfigPaths(), tailwindcss(), tanstackStart({ target: "node-server" }), viteReact()],
 });
 ```
 
@@ -195,7 +190,7 @@ spec:
             initialDelaySeconds: 30
           resources:
             requests: { cpu: 200m, memory: 256Mi }
-            limits:   { cpu: 1000m, memory: 1Gi }
+            limits: { cpu: 1000m, memory: 1Gi }
 ---
 apiVersion: v1
 kind: Service
