@@ -37,8 +37,11 @@ RUN npm install --omit=dev
 
 EXPOSE 3000
 
-# Run the production server
-CMD ["node", "dist/server/server.js"]
+# Copy server wrapper
+COPY server-node.mjs ./server-node.mjs
+
+# Run the production server via the wrapper
+CMD ["node", "server-node.mjs"]
 
 
 
